@@ -1,0 +1,1865 @@
+[
+  {
+    "id": "4",
+    "name": "Jalan Kayu",
+    "address": "Blk 447A Jalan Kayu, #01-01/02, 791447",
+    "lat": 1.392138252483,
+    "lng": 103.872490556246,
+    "postalCode": "791447",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "5",
+    "name": "Katong Village Hotel",
+    "address": "30 East Coast Road Katong Village Hotel #01-06/07/08/09, 428751",
+    "lat": 1.30394669999181,
+    "lng": 103.902822585763,
+    "postalCode": "428751",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "6",
+    "name": "Kitchener Complex",
+    "address": "Blk 808 French Road, #01-01, 200808",
+    "lat": 1.3088060941423,
+    "lng": 103.861311954595,
+    "postalCode": "200808",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "7",
+    "name": "Bedok Mall",
+    "address": "311 New Upper Changi Road #B2-60 Bedok Mall 467360",
+    "lat": 1.32473632812103,
+    "lng": 103.929256259726,
+    "postalCode": "467360",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "8",
+    "name": "NUH Medical Centre",
+    "address": "1 Lower Kent Ridge Road, #02-16 NUH Medical Centre, 119082",
+    "lat": 1.292774319990535,
+    "lng": 103.784084011452,
+    "postalCode": "119082",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "10",
+    "name": "The Seletar Mall",
+    "address": "33 Sengkang West Avenue #B2-24 Seletar Mall, 797653",
+    "lat": 1.3916,
+    "lng": 103.87619,
+    "postalCode": "797653",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "12",
+    "name": "FairPrice Xtra Jurong Point",
+    "address": "63 Jurong Central 3, #03-01 Jurong Point, 648331",
+    "lat": 1.33931504032005,
+    "lng": 103.705350996191,
+    "postalCode": "648331",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "13",
+    "name": "Sun Plaza (FPS)",
+    "address": "30 Sembawang Drive, #B1-01/02 Sun Plaza, 757713",
+    "lat": 1.4481966623789,
+    "lng": 103.819498634275,
+    "postalCode": "757713",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "14",
+    "name": "Waterway Point",
+    "address": "83 Punggol Central #B2-32 Waterway Point, 828761",
+    "lat": 1.40653611690554,
+    "lng": 103.901988178171,
+    "postalCode": "828761",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "16",
+    "name": "Bishan Blk 510",
+    "address": "Blk 510 Bishan St 13 #01-520, 570510",
+    "lat": 1.34863,
+    "lng": 103.84989,
+    "postalCode": "570510",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "17",
+    "name": "Hyper Sports Hub (FFS)",
+    "address": "1 Stadium Place, #01-29 Singapore Sports Hub, 397628",
+    "lat": 1.30307515150401,
+    "lng": 103.873149707591,
+    "postalCode": "397628",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "18",
+    "name": "Serangoon View",
+    "address": "Blk 476 Upper Serangoon View, #02-18, 530476",
+    "lat": 1.37735,
+    "lng": 103.90372,
+    "postalCode": "530476",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "19",
+    "name": "Sembawang Way",
+    "address": "Blk 355 Sembawang Way #01-01, 750355",
+    "lat": 1.44954485621129,
+    "lng": 103.81872759237,
+    "postalCode": "750355",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "20",
+    "name": "Changi Airport T3",
+    "address": "65 Airport Boulevard, Basement 2 North Unit B2L52, #B2-10, Terminal 3, 819663",
+    "lat": 1.35622640396404,
+    "lng": 103.986102046442,
+    "postalCode": "819663",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "21",
+    "name": "Dover",
+    "address": "Blk 28 Dover Crescent, #01-83, 130028",
+    "lat": 1.3047635676742,
+    "lng": 103.781697199348,
+    "postalCode": "130028",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "22",
+    "name": "Upper Boon Keng",
+    "address": "Blk 5 Upper Boon Keng Road, #01-05, 380005",
+    "lat": 1.31264014497827,
+    "lng": 103.872418973561,
+    "postalCode": "380005",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "23",
+    "name": "Compassvale Link",
+    "address": "Blk 277C Compassvale Link, #01-13, 543277",
+    "lat": 1.38185,
+    "lng": 103.89393,
+    "postalCode": "543277",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "24",
+    "name": "Lorong Limau",
+    "address": "Blk 80 Lorong Limau, #01-191, 320080",
+    "lat": 1.32379607125113,
+    "lng": 103.855670620709,
+    "postalCode": "320080",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "25",
+    "name": "Buona Vista CC",
+    "address": "Blk 36 Holland Drive, #01-03/04/05, 270036",
+    "lat": 1.30922984207133,
+    "lng": 103.792660857646,
+    "postalCode": "270036",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "26",
+    "name": "Yew Tee Point",
+    "address": "21 Choa Chu Kang North 6, Yew Tee Point, #B1-01, 689578",
+    "lat": 1.39696992276974,
+    "lng": 103.746443198224,
+    "postalCode": "689578",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "27",
+    "name": "Joo Chiat Complex",
+    "address": "Blk 2 Joo Chiat Road #01-1139/#02-1139, Joo Chiat Complex, 420002",
+    "lat": 1.31570632173317,
+    "lng": 103.899054062785,
+    "postalCode": "420002",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "28",
+    "name": "City Square Mall",
+    "address": "180 Kitchener Road, City Square Mall, #B1-09/10, 208539",
+    "lat": 1.31139,
+    "lng": 103.85661,
+    "postalCode": "208539",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "29",
+    "name": "Kang Kar Mall",
+    "address": "100 Hougang Ave 10 #01-01/#02-01, Kang Kar Mall, 538767",
+    "lat": 1.37167,
+    "lng": 103.89435,
+    "postalCode": "538767",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "30",
+    "name": "Canberra Road Blk 511",
+    "address": "Blk 511 Canberra Road, #02-03, 750511",
+    "lat": 1.45384518789713,
+    "lng": 103.819543381113,
+    "postalCode": "750511",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "31",
+    "name": "Eunos Crescent Blk 5",
+    "address": "Blk 5 Eunos Crescent #01-2619/21, 400005",
+    "lat": 1.32119096792679,
+    "lng": 103.90355416253,
+    "postalCode": "400005",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "34",
+    "name": "Nex",
+    "address": "23 Serangoon Central, #03-42 Nex Mall, 556083",
+    "lat": 1.35064,
+    "lng": 103.87181,
+    "postalCode": "556083",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "35",
+    "name": "The Clementi Mall",
+    "address": "3155 Commonwealth Avenue West #B1-12/13/14 The Clementi Mall 129588",
+    "lat": 1.31489619633966,
+    "lng": 103.764423054189,
+    "postalCode": "129588",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "36",
+    "name": "MyVillage",
+    "address": "1 Maju Ave #B1-11 to #B1-K09 Serangoon Garden Village, 556679",
+    "lat": 1.36511490572797,
+    "lng": 103.865159501442,
+    "postalCode": "556679",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "39",
+    "name": "Bishan North Blk 279",
+    "address": "Blk 279 Bishan St 24, #01-62/64, 570279",
+    "lat": 1.35722283118337,
+    "lng": 103.843785252615,
+    "postalCode": "570279",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "40",
+    "name": "Lengkong Tiga",
+    "address": "Blk 110 Lengkong Tiga, #01-233/235, 410110",
+    "lat": 1.3236534523481,
+    "lng": 103.910853633161,
+    "postalCode": "410110",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "41",
+    "name": "Geylang Lorong 38",
+    "address": "612/620 Geylang Lorong 38 389551",
+    "lat": 1.31415001272084,
+    "lng": 103.888544866086,
+    "postalCode": "389551",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "43",
+    "name": "Scotts Square",
+    "address": "6 Scotts Road #B1-03 to 07 and #B1-10 Scotts Square, 228209",
+    "lat": 1.30579942993543,
+    "lng": 103.833074706219,
+    "postalCode": "228209",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "44",
+    "name": "PSA Branch",
+    "address": "460 Alexandra Road, #01-09 and #01-16, 119963",
+    "lat": 1.27414893629254,
+    "lng": 103.801399416665,
+    "postalCode": "119963",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "45",
+    "name": "Hyper Changi (FPS)",
+    "address": "8 Changi Business Park Ave 1, #01-51 & #02-51, 486018",
+    "lat": 1.334822667363,
+    "lng": 103.963905761359,
+    "postalCode": "486018",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "46",
+    "name": "Zhong Shan Park",
+    "address": "20 Ah Hood Road #02-01 Zhong Shan Park, 329984",
+    "lat": 1.32809,
+    "lng": 103.84753,
+    "postalCode": "329984",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "47",
+    "name": "Chinatown Point",
+    "address": "133 New Bridge Road, #B1-01 Chinatown Point, 059413",
+    "lat": 1.28526967945116,
+    "lng": 103.845037770312,
+    "postalCode": "059413",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "48",
+    "name": "100AM",
+    "address": "100 Tras Street #B1-01 100AM, 079027",
+    "lat": 1.27852,
+    "lng": 103.84447,
+    "postalCode": "079027",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "49",
+    "name": "Woodlands Ave 1",
+    "address": "Blk 570B Woodlands Ave 1, #01-06, 732570",
+    "lat": 1.43106395485681,
+    "lng": 103.790454078756,
+    "postalCode": "732570",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "50",
+    "name": "Valley Point",
+    "address": "491 River Valley Road #01-14 Valley Point, 248371",
+    "lat": 1.29304,
+    "lng": 103.82693,
+    "postalCode": "248371",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "51",
+    "name": "West Coast",
+    "address": "Blk 502 West Coast Drive, #01-41, 120502",
+    "lat": 1.31190695723944,
+    "lng": 103.759128018939,
+    "postalCode": "120502",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "53",
+    "name": "Redhill",
+    "address": "20 Lengkok Bahru, #01-13, 159053",
+    "lat": 1.28695647050586,
+    "lng": 103.814777617952,
+    "postalCode": "159053",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "54",
+    "name": "Jalan Bukit Merah",
+    "address": "1 Jalan Bukit Merah, #01-4500, 150001",
+    "lat": 1.28645354030174,
+    "lng": 103.808242400418,
+    "postalCode": "150001",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "55",
+    "name": "Bukit Batok HT",
+    "address": "2 Bukit Batok West Ave 7 #01-10, HomeTeamNS Bukit Batok Clubhouse, 659003",
+    "lat": 1.34661755651366,
+    "lng": 103.746951747398,
+    "postalCode": "659003",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "58",
+    "name": "Yew Tee MRT",
+    "address": "61 Choa Chu Kang Drive, #01-01 Yew Tee MRT Station, 689715",
+    "lat": 1.39753506936297,
+    "lng": 103.747405150236,
+    "postalCode": "689715",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "60",
+    "name": "Tai Seng",
+    "address": "18 Tai Seng Street, Mapletree 18 #B1-13, 539775",
+    "lat": 1.33631557522577,
+    "lng": 103.888825620348,
+    "postalCode": "539775",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "61",
+    "name": "SingPost Centre",
+    "address": "10 Eunos Road 8, SingPost Centre, #B1-101 to 107, 408600",
+    "lat": 1.31885611019401,
+    "lng": 103.89406715568,
+    "postalCode": "408600",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "62",
+    "name": "Toa Payoh Blk 95",
+    "address": "Blk 95 Toa Payoh Lorong 4, #01-64/70/72, 310095",
+    "lat": 1.33889072150034,
+    "lng": 103.848993316875,
+    "postalCode": "310095",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "63",
+    "name": "Bendemeer Road",
+    "address": "Blk 30 Bendemeer Road, #01-871, 330030",
+    "lat": 1.319303367127,
+    "lng": 103.86404981515,
+    "postalCode": "330030",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "65",
+    "name": "111 Somerset",
+    "address": "111 Somerset Road, #01-01/02, #01-21 to 30, 238164",
+    "lat": 1.30019,
+    "lng": 103.8373,
+    "postalCode": "238164",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "66",
+    "name": "Punggol Oasis (FFS)",
+    "address": "681 Punggol Drive Oasis Terraces, #B1-01, 820681",
+    "lat": 1.4028784582503,
+    "lng": 103.913195741417,
+    "postalCode": "820681",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "67",
+    "name": "Ghim Moh Link",
+    "address": "Blk 29A, Ghim Moh Link, #01-01, 271029",
+    "lat": 1.30849288050575,
+    "lng": 103.784598100953,
+    "postalCode": "271029",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "68",
+    "name": "Punggol Drive Blk 612",
+    "address": "612 Punggol Drive, #01-06, 820612",
+    "lat": 1.40461030856138,
+    "lng": 103.908465597491,
+    "postalCode": "820612",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "69",
+    "name": "Kampung Admiralty",
+    "address": "Blk 676 Woodlands Drive 71, #B1-02, Kampung Admiralty, 730676",
+    "lat": 1.43977701476241,
+    "lng": 103.800573459822,
+    "postalCode": "730676",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "70",
+    "name": "Northpoint City",
+    "address": "1 Northpoint Drive, Northpoint City, #B2-103 to 107, 768019",
+    "lat": 1.42790289991304,
+    "lng": 103.836177650973,
+    "postalCode": "768019",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "71",
+    "name": "Jurong East Blk 249",
+    "address": "Blk 249 Jurong East St 24, #01-106, 600249",
+    "lat": 1.3425910516404,
+    "lng": 103.731994898696,
+    "postalCode": "600249",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "72",
+    "name": "Silat Ave Blk 150",
+    "address": "Blk 150 Silat Ave, #01-44, 160150",
+    "lat": 0.0,
+    "lng": 0.0,
+    "postalCode": "160150",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "73",
+    "name": "Bukit Batok West",
+    "address": "Blk 166 Bukit Batok West Ave 8, #01-256/258, 650166",
+    "lat": 1.34715255032968,
+    "lng": 103.742824825591,
+    "postalCode": "650166",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "74",
+    "name": "Our Tampines Hub",
+    "address": "1 Tampines Walk, Our Tampines Hub, #B1-01, 528523",
+    "lat": 1.35330030677679,
+    "lng": 103.940525443768,
+    "postalCode": "528523",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "76",
+    "name": "Jurong East 345",
+    "address": "Blk 345 Jurong East St 31, #01-29, 600345",
+    "lat": 1.34551209957175,
+    "lng": 103.731219147654,
+    "postalCode": "600345",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "77",
+    "name": "Sengkang East Avenue",
+    "address": "Blk 279 Sengkang East Avenue, #01-05, 540279",
+    "lat": 1.38667,
+    "lng": 103.89302,
+    "postalCode": "540279",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "78",
+    "name": "Bukit Batok MRT",
+    "address": "10 Bukit Batok Central, #01-08, 659958",
+    "lat": 1.34903331201636,
+    "lng": 103.749566473809,
+    "postalCode": "659958",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "79",
+    "name": "Bukit Ho Swee",
+    "address": "Blk 50 Havelock Rd, #01-755, 160050",
+    "lat": 1.28977813910144,
+    "lng": 103.826793749912,
+    "postalCode": "160050",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "80",
+    "name": "Boon Lay Shopping Complex",
+    "address": "Blk 221 Boon Lay Place #02-200 Boon Lay Shopping Complex, 640221",
+    "lat": 1.34633552457315,
+    "lng": 103.712430373455,
+    "postalCode": "640221",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "82",
+    "name": "Bedok North",
+    "address": "Blk 212 Bedok North St 1, #01-147, 460212",
+    "lat": 1.326,
+    "lng": 103.93161,
+    "postalCode": "460212",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "83",
+    "name": "Bedok Nth Blk 89",
+    "address": "Blk 89 Bedok North St 4, #01-77/79, 460089",
+    "lat": 1.3323468349262,
+    "lng": 103.938051284737,
+    "postalCode": "460089",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "84",
+    "name": "Bukit Panjang Plaza",
+    "address": "No.1 Jelebu Rd, #01-15 & #02-20 Bukit Panjang Plaza, 677743",
+    "lat": 1.38050269662711,
+    "lng": 103.764004651432,
+    "postalCode": "677743",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "85",
+    "name": "Bukit Timah Plaza",
+    "address": "8QQH+78 Singapore",
+    "lat": 1.3381878647609,
+    "lng": 103.778269921461,
+    "postalCode": "0",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "87",
+    "name": "Clementi A (Blk 451)",
+    "address": "Blk 451 Clementi Ave 3, #01-307, 120451",
+    "lat": 1.31264,
+    "lng": 103.76567,
+    "postalCode": "120451",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "88",
+    "name": "Clementi Blk 352",
+    "address": "Blk 352 Clementi Ave 2, #01-141/143, 120352",
+    "lat": 1.31427860227337,
+    "lng": 103.771350557894,
+    "postalCode": "120352",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "89",
+    "name": "Coronation Plaza (closed)",
+    "address": "587 Bukit Timah Rd #01-01, Coronation Plaza, 269707",
+    "lat": 1.32383512178759,
+    "lng": 103.809999570047,
+    "postalCode": "269707",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "90",
+    "name": "Eastpoint",
+    "address": "3 Simei Street 6, Singapore 528833",
+    "lat": 1.3427357662661,
+    "lng": 103.9530428310648,
+    "postalCode": "528833",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "91",
+    "name": "Geylang East",
+    "address": "Blk 114 Aljunied Ave 2, #01-75, 380114",
+    "lat": 1.32172296225797,
+    "lng": 103.886811795181,
+    "postalCode": "380114",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "92",
+    "name": "Blk 202 Hougang St 21",
+    "address": "Blk 202 Hougang St 21#01-00, 530202",
+    "lat": 1.35744,
+    "lng": 103.88364,
+    "postalCode": "530202",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "93",
+    "name": "Hougang Blk 682",
+    "address": "Blk 682 Hougang Ave 4, #01-310, 530682",
+    "lat": 1.37361830380888,
+    "lng": 103.885748856217,
+    "postalCode": "530682",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "94",
+    "name": "Hougang Mall",
+    "address": "90 Hougang Ave 10, Hougang Mall, #B1-07, 538766",
+    "lat": 1.37231186447501,
+    "lng": 103.893667309307,
+    "postalCode": "538766",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "95",
+    "name": "Jurong East",
+    "address": "Blk 135 Jurong Gateway Road, #01-337, 600135",
+    "lat": 0.0,
+    "lng": 0.0,
+    "postalCode": "600135",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "97",
+    "name": "Jalan Teck Whye",
+    "address": "Blk 140 Teck Whye Lane, #01-351, 680140",
+    "lat": 1.38003057776619,
+    "lng": 103.753118416568,
+    "postalCode": "680140",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "98",
+    "name": "Jurong West St 41",
+    "address": "498 Jurong West Street 41, #01-426, Singapore 640498",
+    "lat": 1.34833335760515,
+    "lng": 103.724307319237,
+    "postalCode": "640498",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "99",
+    "name": "Kallang Bahru",
+    "address": "Blk 71 Kallang Bahru, #01-529/#02-531, 330071",
+    "lat": 1.3209929422065,
+    "lng": 103.870389998344,
+    "postalCode": "330071",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "100",
+    "name": "Limbang Shopping Centre",
+    "address": "Blk 533 Choa Chu Kang St 51 #01-01, Limbang Shopping Centre, 680533",
+    "lat": 1.39207387937105,
+    "lng": 103.743099576162,
+    "postalCode": "680533",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "101",
+    "name": "Lot 1 Shoppers' Mall",
+    "address": "21 Choa Chu Kang Ave 4, #B1-05 Lot 1 Shoppers' Mall, 689812",
+    "lat": 1.38493874036122,
+    "lng": 103.745022476677,
+    "postalCode": "689812",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "102",
+    "name": "Marsiling MRT Station",
+    "address": "71 Woodlands Ave 3 #01-01, Marsiling MRT Station, 739044",
+    "lat": 1.43256,
+    "lng": 103.77416,
+    "postalCode": "739044",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "103",
+    "name": "Marine Parade",
+    "address": "No. 6 Marine Parade Central, 449411",
+    "lat": 1.30153,
+    "lng": 103.90699,
+    "postalCode": "449411",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "104",
+    "name": "New Upper Changi",
+    "address": "Blk 57 New Upper Changi Rd, #01-1334/1336/1338, 461057",
+    "lat": 1.32424554153984,
+    "lng": 103.941568704132,
+    "postalCode": "461057",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "105",
+    "name": "Serangoon North Ave 1",
+    "address": "Blk 152B Serangoon North Ave 1, #01-384, 552152",
+    "lat": 1.36979940374161,
+    "lng": 103.873033579046,
+    "postalCode": "552152",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "107",
+    "name": "Tampines Blk 475",
+    "address": "Blk 475 Tampines St 44, #01-145, 520475",
+    "lat": 1.36032331939995,
+    "lng": 103.953129640464,
+    "postalCode": "520475",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "108",
+    "name": "Tampines Mall",
+    "address": "4 Tampines Central 5, #B1-12 Tampines Mall, 529510",
+    "lat": 1.35250468330971,
+    "lng": 103.944682574769,
+    "postalCode": "529510",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "109",
+    "name": "Telok Blangah",
+    "address": "Blk 78A Telok Blangah St 32, #01-01/02, 101078",
+    "lat": 1.27338251992557,
+    "lng": 103.808934870512,
+    "postalCode": "101078",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "110",
+    "name": "Teban Garden",
+    "address": "Blk 37 Teban Garden Rd, #01-304/305/306, 600037",
+    "lat": 1.32053143645806,
+    "lng": 103.742652199249,
+    "postalCode": "600037",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "111",
+    "name": "Tanjong Pagar Plaza",
+    "address": "Blk 1 Tanjong Pagar Plaza, #01-01, 082001",
+    "lat": 1.2756847511494,
+    "lng": 103.842433449984,
+    "postalCode": "082001",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "112",
+    "name": "Thomson Plaza",
+    "address": "301 Upper Thomson Rd #03-37/38 Thomson Plaza, 574408",
+    "lat": 1.35464,
+    "lng": 103.83094,
+    "postalCode": "574408",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "113",
+    "name": "Taman Jurong Shopping Centre",
+    "address": "Taman Jurong Shopping Centre, Blk 399 Yung Sheng Rd #01-35, 610399",
+    "lat": 1.3346654460572,
+    "lng": 103.720685511067,
+    "postalCode": "610399",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "114",
+    "name": "Woodlands 888",
+    "address": "Blk 888 Woodlands Dr 50, #01-757, 730888",
+    "lat": 1.4377,
+    "lng": 103.79527,
+    "postalCode": "730888",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "115",
+    "name": "Whitesands",
+    "address": "1 Pasir Ris Central St 3, #B1-10 Whitesands, 518457",
+    "lat": 1.37257,
+    "lng": 103.95053,
+    "postalCode": "518457",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "116",
+    "name": "Yung Kuang",
+    "address": "Blk 63/66 Yung Kuang Rd, #01-119/#02-119, 610063",
+    "lat": 1.33221936370928,
+    "lng": 103.722686668956,
+    "postalCode": "610063",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "117",
+    "name": "Yishun MRT",
+    "address": "301 Yishun Ave 2, #01-02, Yishun MRT Station, 769093",
+    "lat": 1.42944308477331,
+    "lng": 103.835005047246,
+    "postalCode": "769093",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "118",
+    "name": "Hougang One",
+    "address": "No.1 Hougang St 91, #02-01 Hougang 1, 538692",
+    "lat": 1.37571530699875,
+    "lng": 103.879472337592,
+    "postalCode": "538692",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "119",
+    "name": "Rivervale Plaza",
+    "address": "118 Rivervale Dr #01-08, Rivervale Plaza, 540118",
+    "lat": 1.38493202140034,
+    "lng": 103.901558018666,
+    "postalCode": "540118",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "120",
+    "name": "Rivervale Mall",
+    "address": "11 Rivervale Crescent, #03-01 Rivervale Mall, 545082",
+    "lat": 1.392,
+    "lng": 103.90498,
+    "postalCode": "545082",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "121",
+    "name": "Yishun Ring Rd",
+    "address": "Blk 414 Yishun Ring Rd, #01-1853, 760414",
+    "lat": 1.42939,
+    "lng": 103.83509,
+    "postalCode": "760414",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "122",
+    "name": "Toa Payoh HDB Hub",
+    "address": "Blk 500 Lorong 6 Toa Payoh, #B1-32/#01-33, 310500",
+    "lat": 1.33285542884681,
+    "lng": 103.847092284316,
+    "postalCode": "310500",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "123",
+    "name": "Khatib",
+    "address": "Blk 849 Yishun Ring Rd, #01-3701/#01-3703, 760849",
+    "lat": 1.4169831658118,
+    "lng": 103.835218177871,
+    "postalCode": "760849",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "124",
+    "name": "Orchard Grand Court",
+    "address": "131 Killiney Rd #01-01/02/03, Orchard Grand Court, 239571",
+    "lat": 1.29731616717126,
+    "lng": 103.838541255824,
+    "postalCode": "239571",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "125",
+    "name": "Junction 8",
+    "address": "9 Bishan Place #B1-01 Junction 8 Shopping Centre 579837",
+    "lat": 1.35042215656701,
+    "lng": 103.848826189269,
+    "postalCode": "579837",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "126",
+    "name": "The Woodgrove",
+    "address": "30 Woodlands Ave 1 #01-11 The Woodgrove, 739065",
+    "lat": 1.42872,
+    "lng": 103.78114,
+    "postalCode": "739065",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "127",
+    "name": "Bukit Batok East",
+    "address": "Blk 280 Bukit Batok East Ave 3, #01-315, 650280",
+    "lat": 1.34770147739311,
+    "lng": 103.757044558452,
+    "postalCode": "650280",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "128",
+    "name": "Senja Grand",
+    "address": "Blk 628 Senja Rd, #01-01, Senja Grand, 673628",
+    "lat": 1.38512867383046,
+    "lng": 103.760410617887,
+    "postalCode": "673628",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "129",
+    "name": "Dawson Place",
+    "address": "Blk 57 Dawson Rd, #01-07 Dawson Place, 142057",
+    "lat": 1.2928,
+    "lng": 103.81093,
+    "postalCode": "142057",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "130",
+    "name": "Tiong Bahru Plaza",
+    "address": "302 Tiong Bahru Rd #B1-122 Tiong Bahru Plaza, 168732",
+    "lat": 1.28646345355064,
+    "lng": 103.826935079694,
+    "postalCode": "168732",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "131",
+    "name": "Depot",
+    "address": "Blk 108 Depot Rd #01-01, Depot Heights Shopping Centre, 108108",
+    "lat": 1.28084469467756,
+    "lng": 103.810292618353,
+    "postalCode": "108108",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "132",
+    "name": "Punggol Plaza",
+    "address": "168 Punggol Field Rd, Punggol Plaza #03-01/02, 820168",
+    "lat": 1.40511,
+    "lng": 103.90867,
+    "postalCode": "820168",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "133",
+    "name": "Tampines Blk 138",
+    "address": "Blk 138 Tampines St 11, #01-136, 521138",
+    "lat": 1.34550450627724,
+    "lng": 103.944558355383,
+    "postalCode": "521138",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "134",
+    "name": "Chai Chee",
+    "address": "Blk 29B Chai Chee Avenue, #01-62, 462029",
+    "lat": 1.3241399156082,
+    "lng": 103.923969688386,
+    "postalCode": "462029",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "135",
+    "name": "Serangoon Central",
+    "address": "Blk 253 Serangoon Central Drive #01-241 550253",
+    "lat": 1.35403939780038,
+    "lng": 103.870851534185,
+    "postalCode": "550253",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "136",
+    "name": "Siglap New Market",
+    "address": "934 East Coast Road Siglap New Market 459125",
+    "lat": 1.31230757275549,
+    "lng": 103.92523456756,
+    "postalCode": "459125",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "137",
+    "name": "Pasir Ris West Plaza",
+    "address": "Blk 734 Pasir Ris St 72 #01-37, Pasir Ris West Plaza, 510734",
+    "lat": 1.37976754317116,
+    "lng": 103.936207567321,
+    "postalCode": "510734",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "138",
+    "name": "AMK Hub",
+    "address": "53 Ang Mo Kio Ave 3, #B2-40 Ang Mo Kio Hub, 569933",
+    "lat": 1.36938922690344,
+    "lng": 103.84847796594,
+    "postalCode": "569933",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "139",
+    "name": "Square 2",
+    "address": "10 Sinaran Dr #04-46/47/48/49, Square 2, 307506",
+    "lat": 1.32044103104797,
+    "lng": 103.844192628979,
+    "postalCode": "307506",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "140",
+    "name": "Tampines CC",
+    "address": "Blk 866A Tampines St 83, #01-01, 521866",
+    "lat": 1.35542177253675,
+    "lng": 103.934315234737,
+    "postalCode": "521866",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "141",
+    "name": "Cambridge Blk 43",
+    "address": "Blk 43 Cambridge Road, #01-15, 210043",
+    "lat": 1.31536302699791,
+    "lng": 103.849434501824,
+    "postalCode": "210043",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "142",
+    "name": "Downtown East",
+    "address": "e! Hub Downtown East 1 Pasir Ris Close #02-127 519599",
+    "lat": 1.3791271787808,
+    "lng": 103.955444758145,
+    "postalCode": "519599",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "143",
+    "name": "Stirling Road",
+    "address": "Blk 170 Stirling Road, #01-1147, 140170",
+    "lat": 1.29090918077067,
+    "lng": 103.80107626115,
+    "postalCode": "140170",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "144",
+    "name": "Jalan Tiga",
+    "address": "Blk 41 Jalan Tiga, #01-05, 390041",
+    "lat": 1.3078273680821,
+    "lng": 103.884763845679,
+    "postalCode": "390041",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "145",
+    "name": "NEPTUNE COURT CHEERS",
+    "address": "#01-33, Neptune Court, 10 Marine Vista, 449034",
+    "lat": 1.30634111170422,
+    "lng": 103.9129618018348,
+    "postalCode": "449034",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "146",
+    "name": "Tampines Blk 107",
+    "address": "Blk 107 Tampines St 11, #01-353/355/357/359, 521107",
+    "lat": 1.34536421471072,
+    "lng": 103.948158723814,
+    "postalCode": "521107",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "147",
+    "name": "ANG MO KIO AVE 8 FAIRPRICE EXPRESS",
+    "address": "2225 Ang Mo Kio Avenue 8 569810",
+    "lat": 1.36257285737839,
+    "lng": 103.852539960282,
+    "postalCode": "569810",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "148",
+    "name": "TAMPINES AVE 7 FAIRPRICE EXPRESS",
+    "address": "9 Tampines Ave 7, 529619",
+    "lat": 1.35755,
+    "lng": 103.95893,
+    "postalCode": "529619",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "149",
+    "name": "EAST COAST FAIRPRICE EXPRESS",
+    "address": "239/255 East Coast Road 428932",
+    "lat": 1.30831,
+    "lng": 103.90799,
+    "postalCode": "428932",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "150",
+    "name": "ANG MO KIO AVE 3 FAIRPRICE EXPRESS",
+    "address": "3551 Ang Mo Kio Avenue 3, 569927",
+    "lat": 0.0,
+    "lng": 0.0,
+    "postalCode": "569927",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "151",
+    "name": "PEACE CENTRE FAIRPRICE EXPRESS",
+    "address": "1 Sophia Road, #01-18, Peace Centre, 228149",
+    "lat": 1.30121862271795,
+    "lng": 103.849592475825,
+    "postalCode": "228149",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "152",
+    "name": "MACPHERSON FAIRPRICE EXPRESS",
+    "address": "110/114 MacPherson Road, 348501",
+    "lat": 1.32869,
+    "lng": 103.87188,
+    "postalCode": "348501",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "153",
+    "name": "SUN PLAZA",
+    "address": "#B1-01/02, Sun Plaza, 30 Sembawang Drive, 757713",
+    "lat": 0.0,
+    "lng": 0.0,
+    "postalCode": "757713",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "154",
+    "name": "VISTA POINT CHEERS",
+    "address": "#01-06, VISTA POINT, Block 548 Woodlands Drive 44, 730548",
+    "lat": 1.43044361849124,
+    "lng": 103.793804884379,
+    "postalCode": "730548",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "155",
+    "name": "TOA PAYOH 2 FAIRPRICE EXPRESS",
+    "address": "399 Toa Payoh Lorong 2 319640",
+    "lat": 1.33632,
+    "lng": 103.84626,
+    "postalCode": "319640",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "156",
+    "name": "Hillion Mall",
+    "address": "17 Petir Road, #B2-67, 678278",
+    "lat": 1.37834972034942,
+    "lng": 103.76274117487,
+    "postalCode": "678278",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "157",
+    "name": "UPPER CHANGI RD FAIRPRICE EXPRESS",
+    "address": "955 Upper Changi Road North 507662",
+    "lat": 1.35981446751057,
+    "lng": 103.969700566122,
+    "postalCode": "507662",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "158",
+    "name": "NUS FAIRPRICE EXPRESS",
+    "address": "#01-05, No. 2 College Avenue West #01-05, 138607",
+    "lat": 1.30597,
+    "lng": 103.77294,
+    "postalCode": "138607",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "159",
+    "name": "CHOA CHU KANG FAIRPRICE EXPRESS",
+    "address": "31 Choa Chu Kang Way, 688786",
+    "lat": 1.37783,
+    "lng": 103.7501,
+    "postalCode": "688786",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "160",
+    "name": "LORONG CHUAN FAIRPRICE EXPRESS",
+    "address": "384 Lorong Chuan 556810",
+    "lat": 1.36237,
+    "lng": 103.86811,
+    "postalCode": "556810",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "161",
+    "name": "YIO CHU KANG RD CHEERS 160",
+    "address": "160 Yio Chu Kang Road 545614",
+    "lat": 1.36100845388431,
+    "lng": 103.873199125258,
+    "postalCode": "545614",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "162",
+    "name": "TAMAN JURONG SHOPPING CENTRE",
+    "address": "#01-35, blk 399 Yung Sheng Rd, 610399",
+    "lat": 1.33482,
+    "lng": 103.72045,
+    "postalCode": "610399",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "163",
+    "name": "Bedok Reservoir Rd",
+    "address": "Blk 745 Bedok Reservoir Rd, #01-3015, 470745",
+    "lat": 1.33737622539858,
+    "lng": 103.921741211998,
+    "postalCode": "470745",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "164",
+    "name": "UPPER THOMSON CHEERS",
+    "address": "594 Upper Thomson Road 574420",
+    "lat": 1.37305526504889,
+    "lng": 103.828947502264,
+    "postalCode": "574420",
+    "storeType": "Click and Collect"
+  },
+  {
+    "id": "165",
+    "name": "FairPrice PFC",
+    "address": "1 Joo Koon Cir, Singapore 629117",
+    "lat": 1.3271618610269,
+    "lng": 103.678279283036,
+    "postalCode": "629117",
+    "storeType": ""
+  },
+  {
+    "id": "166",
+    "name": "Funan Mall",
+    "address": "6 Raffles Quay Singapore 048580",
+    "lat": 1.28181247914636,
+    "lng": 103.85138450513,
+    "postalCode": "048580",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "167",
+    "name": "VivoCity",
+    "address": "1 HarbourFront Walk, #B2-23/#01-23, VivoCity, 098585",
+    "lat": 1.2643737,
+    "lng": 103.8223184,
+    "postalCode": "098585",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "168",
+    "name": "Woodlands Civic Centre",
+    "address": "900 South Woodlands Drive #B1-01 Woodlands Civic Centre 730900",
+    "lat": 1.4350778940091,
+    "lng": 103.786619615641,
+    "postalCode": "730900",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "169",
+    "name": "Toa Payoh Lorong 4",
+    "address": "Blk 192 Toa Payoh Lorong 4, #01-670/672, 310192",
+    "lat": 1.33160440678674,
+    "lng": 103.85051153757,
+    "postalCode": "310192",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "170",
+    "name": "Hyper VivoCity (FFS)",
+    "address": "1 Harbourfront Walk Singapore 098585",
+    "lat": 1.26431382492761,
+    "lng": 103.82207343835,
+    "postalCode": "098585",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "173",
+    "name": "FairPrice Xtra JEM",
+    "address": "#B1-21/22 & B3-01, 50 Jurong Gateway Road, 608549",
+    "lat": 1.33329334473462,
+    "lng": 103.743278742341,
+    "postalCode": "608549",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "174",
+    "name": "PUNGGOL DRIVE OASIS",
+    "address": "B1-01 Oasis Terraces 681 Punggol Drive Oasis Terraces 820681",
+    "lat": 1.40259581502678,
+    "lng": 103.912962428692,
+    "postalCode": "820681",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "175",
+    "name": "POIZ",
+    "address": "51, Upper Serangoon road, #01-30 to 32, 41 to 49, The POIZ Centre S(347697)",
+    "lat": 1.33149708073624,
+    "lng": 103.86821402533,
+    "postalCode": "347697",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "176",
+    "name": "Paya Lebar Quarter",
+    "address": "10 Paya Lebar Road, #B2-09 Paya Lebar Quarter, Singapore, 409057",
+    "lat": 1.31756115921,
+    "lng": 103.892836694432,
+    "postalCode": "409057",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "177",
+    "name": "Jewel Changi Airport",
+    "address": "78 Airport Boulevard #B2-205 to 208 Jewel Changi Airport 819666",
+    "lat": 1.35993782064432,
+    "lng": 103.990002942162,
+    "postalCode": "819666",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "178",
+    "name": "Canberra Plaza",
+    "address": "133 Canberra View, #B1-03/04, Singapore 750133",
+    "lat": 1.44349544527985,
+    "lng": 103.830345369213,
+    "postalCode": "750133",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "179",
+    "name": "Artra",
+    "address": "12 Alexandra View #01-18 Singapore 158736",
+    "lat": 1.29012765494819,
+    "lng": 103.816552347869,
+    "postalCode": "158736",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "180",
+    "name": "LeQuest",
+    "address": "4 Bukit Batok Street 41 #01-91/92 Singapore 657991",
+    "lat": 1.35594171176111,
+    "lng": 103.741127005764,
+    "postalCode": "657991",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "183",
+    "name": "Donation Store",
+    "address": "Singapore 509191",
+    "lat": 0.0,
+    "lng": 0.0,
+    "postalCode": "509191",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "184",
+    "name": "Parkway Parade",
+    "address": "80 Marine Parade Rd, Singapore 449269",
+    "lat": 1.30106975506311,
+    "lng": 103.905279491524,
+    "postalCode": "449269",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "186",
+    "name": "Hyper Parkway (FFS)",
+    "address": "80 Marine Parade Rd, Singapore 449269",
+    "lat": 1.301041960873,
+    "lng": 103.905505005847,
+    "postalCode": "449269",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "188",
+    "name": "",
+    "address": "",
+    "lat": 1.29684825480832,
+    "lng": 103.852535916404,
+    "postalCode": "0",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "190",
+    "name": "Ang Mo Kio Ave 10 Blk 453",
+    "address": "453 Ang Mo Kio Ave 10 Block 453 Singapore 560453",
+    "lat": 1.36858206013781,
+    "lng": 103.855983050439,
+    "postalCode": "560453",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "191",
+    "name": "Hyper Changi",
+    "address": "8 Changi Business Park Ave 1, #01-51 & #02-51, 486018",
+    "lat": 1.33491977663975,
+    "lng": 103.963653900382,
+    "postalCode": "486018",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "192",
+    "name": "Hyper Sports Hub",
+    "address": "1 Stadium Place, #01-29 Singapore Sports Hub, 397628",
+    "lat": 1.30307515150401,
+    "lng": 103.873149707591,
+    "postalCode": "397628",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "193",
+    "name": "SUN PLAZA",
+    "address": "30 Sembawang Drive, #B1-01/02 Sun Plaza, 757713",
+    "lat": 1.4481966623789,
+    "lng": 103.819498634275,
+    "postalCode": "757713",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "194",
+    "name": "Balmoral Plaza",
+    "address": "271 Bukit Timah Rd Singapore 259708",
+    "lat": 1.3164396325472,
+    "lng": 103.835487586609,
+    "postalCode": "259708",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "195",
+    "name": "Bukit Merah Central",
+    "address": "166 Bukit Merah Central, #01-3531 & #02-3531, Singapore 150166",
+    "lat": 1.28309262574973,
+    "lng": 103.817667202586,
+    "postalCode": "150166",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "196",
+    "name": "Holland Village",
+    "address": "Raffles Holland V Mall, B1, 118 Holland Ave, Singapore 278997",
+    "lat": 1.31056351530083,
+    "lng": 103.796107173318,
+    "postalCode": "278997",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "197",
+    "name": "Causeway Point",
+    "address": "1 Woodlands Square #B1-31/32/33 Singapore 738099",
+    "lat": 1.4360700650803,
+    "lng": 103.785981524253,
+    "postalCode": "738099",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "198",
+    "name": "Choa Chu Kang St 51",
+    "address": "533 Choa Chu Kang Street 51 Singapore 680533",
+    "lat": 1.39207387937105,
+    "lng": 103.743099576162,
+    "postalCode": "680533",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "199",
+    "name": "Wisteria Mall",
+    "address": "598 Yishun Ring Road, #01-01 Wisteria Mall, 768698",
+    "lat": 1.41795288501536,
+    "lng": 103.841268831617,
+    "postalCode": "768698",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "200",
+    "name": "Coronation Plaza",
+    "address": "587 Bukit Timah Rd #01-01 Singapore 269707",
+    "lat": 1.32383512178759,
+    "lng": 103.809999570047,
+    "postalCode": "269707",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "201",
+    "name": "The Centrepoint",
+    "address": "176 Orchard Rd Singapore 238843",
+    "lat": 1.30218869495538,
+    "lng": 103.839586243597,
+    "postalCode": "238843",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "202",
+    "name": "Ang Mo Kio Blk 712",
+    "address": "712 Ang Mo Kio Ave 6, #01-4056, Singapore 560712",
+    "lat": 1.3714109677026,
+    "lng": 103.847084468485,
+    "postalCode": "560712",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "205",
+    "name": "Senja Heights",
+    "address": "Blk 642 Senja Close #01-01, 670642",
+    "lat": 1.38712667134352,
+    "lng": 103.761961018682,
+    "postalCode": "670642",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "206",
+    "name": "Jurong West 502",
+    "address": "Jurong West Ave 1 Blk 502 640502",
+    "lat": 1.350433775790143,
+    "lng": 103.718113766987,
+    "postalCode": "640502",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "207",
+    "name": "Sengkang Grand",
+    "address": "70 Compassvale Bow Buangkok Hawker Centre Singapore 544692",
+    "lat": 1.3825930614351,
+    "lng": 103.8921880745117,
+    "postalCode": "544692",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "208",
+    "name": "Shaw Plaza",
+    "address": "360 Balestier Road Shaw Plaza Level 2 329783",
+    "lat": 1.32525301846661,
+    "lng": 103.850995830211,
+    "postalCode": "329783",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "209",
+    "name": "The Woodleigh Mall",
+    "address": "11 Bidadari Park Drive, #B1-32/33, The Woodleigh Mall, 367803",
+    "lat": 1.33862584308,
+    "lng": 103.8715904387414,
+    "postalCode": "367803",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "210",
+    "name": "Orchid Country Club (PFS)",
+    "address": "#01-34 Level 1, Orchid Country Club, 1 Orchid Club Rd, 769162",
+    "lat": 1.4110553473838,
+    "lng": 103.844186136559,
+    "postalCode": "769162",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "211",
+    "name": "Orchid Country Club",
+    "address": "1 Orchid Club Road, Orchid Country Club, #01-34, Singapore 769162",
+    "lat": 1.4110553473838,
+    "lng": 103.844186136559,
+    "postalCode": "769162",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "212",
+    "name": "Hyper Hougang (FFS)",
+    "address": "Ctrl PL Singapore",
+    "lat": 1.29684825480832,
+    "lng": 103.852535916404,
+    "postalCode": "0",
+    "storeType": "FairPrice Xtra"
+  },
+  {
+    "id": "213",
+    "name": "653B Punggol Drive",
+    "address": "653B Punggol Drive, #01-06, 5822653",
+    "lat": 1.39771188370126,
+    "lng": 103.919658290148,
+    "postalCode": "822653",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "214",
+    "name": "Komo Shoppes",
+    "address": "963C Upper Changi Rd N, Singapore 506790",
+    "lat": 1.3603618,
+    "lng": 103.9701466,
+    "postalCode": "506790",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "215",
+    "name": "Dairy Farm Residences",
+    "address": "8 Dairy Farm Ln Singapore 677624",
+    "lat": 1.3663192,
+    "lng": 103.7743963,
+    "postalCode": "677624",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "216",
+    "name": "Century Square",
+    "address": "2 Tampines Central 5 Singapore 529509",
+    "lat": 1.352630356614,
+    "lng": 103.9436770017738,
+    "postalCode": "529509",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "217",
+    "name": "Clarke Quay",
+    "address": "3 River Valley Rd, b01 05 06 s, Singapore 179019",
+    "lat": 1.2902865,
+    "lng": 103.8444957,
+    "postalCode": "179019",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "218",
+    "name": "FairPrice Joo Koon",
+    "address": "1 Joo Koon Cir Singapore 629117",
+    "lat": 1.3268021,
+    "lng": 103.678893,
+    "postalCode": "629117",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "219",
+    "name": "Anchorvale Village",
+    "address": "339 Anchorvale Rd 339 Singapore 540339",
+    "lat": 1.3966605,
+    "lng": 103.8881983,
+    "postalCode": "540339",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "220",
+    "name": "Eastpoint (FFS)",
+    "address": "3 Simei Street 6 Singapore 528833",
+    "lat": 1.34270592355576,
+    "lng": 103.953024618234,
+    "postalCode": "528833",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "221",
+    "name": "Tampines North 633",
+    "address": "633 Tampines North Dr 2 #01-01 Singapore",
+    "lat": 1.3644782,
+    "lng": 103.9415643,
+    "postalCode": "0",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "222",
+    "name": "FairPrice Rivervale Shores",
+    "address": "170B Sengkang E Dr Singapore 542170",
+    "lat": 1.38671838587829,
+    "lng": 103.909029340508,
+    "postalCode": "542170",
+    "storeType": ""
+  },
+  {
+    "id": "223",
+    "name": "CED - FairPrice",
+    "address": "Singapore 218197",
+    "lat": 1.3158501140362,
+    "lng": 103.858286287131,
+    "postalCode": "218197",
+    "storeType": ""
+  },
+  {
+    "id": "224",
+    "name": "FairPrice Northshore",
+    "address": "431A Northshore Dr, #01 02, Singapore 821431",
+    "lat": 1.4173644025745,
+    "lng": 103.9111882030593,
+    "postalCode": "821431",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "225",
+    "name": "FairPrice Greenridge",
+    "address": "524A Jelapang Rd, #03 13, Singapore 671524",
+    "lat": 1.38529556252903,
+    "lng": 103.766170532051,
+    "postalCode": "671524",
+    "storeType": ""
+  },
+  {
+    "id": "226",
+    "name": "FairPrice MacPherson Blossom",
+    "address": "76 Circuit Rd #02 13 Singapore 370076",
+    "lat": 1.32551693484516,
+    "lng": 103.889903603926,
+    "postalCode": "370076",
+    "storeType": ""
+  },
+  {
+    "id": "228",
+    "name": "AMK712B (FPS)",
+    "address": "712 Ang Mo Kio Ave 6 #01-4056 Singapore 560712",
+    "lat": 1.3714109677026,
+    "lng": 103.847084468485,
+    "postalCode": "560712",
+    "storeType": ""
+  },
+  {
+    "id": "229",
+    "name": "FairPrice Finest Sembawang Shopping Centre",
+    "address": "604 Sembawang Road Singapore 758459",
+    "lat": 1.441615,
+    "lng": 103.8246417,
+    "postalCode": "758459",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "231",
+    "name": "Tai Seng (FPS)",
+    "address": "18 Tai Seng St Singapore 539775",
+    "lat": 1.33631557522577,
+    "lng": 103.888825620348,
+    "postalCode": "539775",
+    "storeType": ""
+  },
+  {
+    "id": "232",
+    "name": "Joo Koon (UI)",
+    "address": "1 Joo Koon Cir level 3 Singapore 629117",
+    "lat": 1.32561767765205,
+    "lng": 103.678409741897,
+    "postalCode": "629117",
+    "storeType": ""
+  },
+  {
+    "id": "233",
+    "name": "Punggol Coast Mall",
+    "address": "#01-127/98 Punggol Way Punggol Coast Mall Tower 10 829857",
+    "lat": 1.41470557625612,
+    "lng": 103.912635422712,
+    "postalCode": "829857",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "234",
+    "name": "FairPrice Bedok Reservoir 631",
+    "address": "629 Bedok Reservoir Rd Singapore 470629",
+    "lat": 1.3334182493339,
+    "lng": 103.9141332515389,
+    "postalCode": "470629",
+    "storeType": ""
+  },
+  {
+    "id": "236",
+    "name": "Punggol Coast Mall (UHD)",
+    "address": "#01-127/98 Punggol Way Punggol Coast Mall Tower 10 829857",
+    "lat": 1.41471053650707,
+    "lng": 103.912493638367,
+    "postalCode": "829857",
+    "storeType": ""
+  },
+  {
+    "id": "237",
+    "name": "FairPrice Towner",
+    "address": "150 Towner Road #01-02 Singapore 320150",
+    "lat": 1.3182702679388,
+    "lng": 103.859722423286,
+    "postalCode": "320150",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "238",
+    "name": "FairPrice Old Airport Hawker Centre",
+    "address": "Blk 51 Old Airport Road #02-01 Singapore 390051",
+    "lat": 1.3084036153018,
+    "lng": 103.885807580694,
+    "postalCode": "390051",
+    "storeType": "FairPrice"
+  },
+  {
+    "id": "239",
+    "name": "Dunearn Village",
+    "address": "896 Dunearn Road, #02-01, 02-17, 02-18, Dunearn Village, Singapore 589472",
+    "lat": 1.3364483129463,
+    "lng": 103.7826241770362,
+    "postalCode": "589472",
+    "storeType": "FairPrice Finest"
+  },
+  {
+    "id": "240",
+    "name": "FairPrice Tengah Parc Point",
+    "address": "302 Tengah Park Avenue, #B1-01/02 Singapore 690302",
+    "lat": 1.35969,
+    "lng": 103.738667,
+    "postalCode": "690302",
+    "storeType": "FairPrice"
+  }
+]
