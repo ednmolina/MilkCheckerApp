@@ -15,14 +15,13 @@ API calls per run:
 import sys
 import os
 import time
-import json
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fairprice_api import PRODUCT_SKU, get_warehouse_stock, get_store_stock
+from fairprice_api import PRODUCTS, PRODUCT_SKU, get_warehouse_stock, get_store_stock
 from data_store import (
     load_stores, save_stores_csv, append_warehouse_snapshot,
-    append_store_stock, append_store_stock_batch, ensure_data_dir, generate_batch_id,
+    append_store_stock_batch, ensure_data_dir, generate_batch_id,
     get_latest_store_stock, get_batch_ids, using_gsheets_backend, STORES_CSV,
 )
 
@@ -51,12 +50,12 @@ def _should_check_store(store_id: str, latest_stock: dict, run_count: int) -> bo
     # last_stock < 0 (not available at this store)
     return False  # Skip - product not carried here, check on full runs only
 
-def _get_run_count() -> int:
+def _get_run_count(product_sku: str = PRODUCT_SKU) -> int:
     """
     Track how many historical batches already exist.
     Returns the current run number (0-indexed).
     """
-    return len(get_batch_ids(product_sku=PRODUCT_SKU))
+    return len(get_batch_ids(product_sku=product_sku))
 
 def _stores_csv_needs_update() -> bool:
     """Check if the stores export needs to be refreshed."""
@@ -78,12 +77,8 @@ def run_stock_check(verbose=True):
     ensure_data_dir()
 
     batch_id = generate_batch_id()
-    run_count = _get_run_count()
-    is_full_run = (run_count % 6 == 0)
-
     if verbose:
-        run_type = "FULL" if is_full_run else "SMART"
-        print(f"Batch ID: {batch_id} (Run #{run_count}, {run_type} check)")
+        print(f"Batch ID: {batch_id}")
 
     # Load all stores
     stores = load_stores()
@@ -98,117 +93,131 @@ def run_stock_check(verbose=True):
         if verbose:
             print("Updated stores.csv")
 
-    # 1. Check warehouse stock (1 API call + maybe 1 for price if cache expired)
-    if verbose:
-        print("Checking warehouse stock...")
-    warehouse = get_warehouse_stock()
-    if warehouse:
-        append_warehouse_snapshot(warehouse)
-        if verbose:
-            print(f"  Warehouse: {warehouse['in_store_stock']} units, "
-                  f"${warehouse['price']} (MRP ${warehouse['mrp']})")
-    else:
-        if verbose:
-            print("  WARNING: Could not fetch warehouse stock")
-
-    # 2. Smart per-store stock check
     valid_stores = [s for s in stores if s.get("lat") and s.get("lng")]
-    latest_stock = get_latest_store_stock(product_sku=PRODUCT_SKU)
+    all_rows = []
+    product_messages = []
 
-    # Decide which stores to check this run
-    stores_to_check = []
-    stores_to_skip = []
-    for store in valid_stores:
-        sid = str(store["id"])
-        if _should_check_store(sid, latest_stock, run_count):
-            stores_to_check.append(store)
+    for product_key, product in PRODUCTS.items():
+        product_name = product["name"]
+        product_sku = product["sku"]
+        run_count = _get_run_count(product_sku=product_sku)
+        is_full_run = (run_count % 6 == 0)
+
+        if verbose:
+            run_type = "FULL" if is_full_run else "SMART"
+            print(f"\n[{product_key}] {product_name}")
+            print(f"Run #{run_count} ({run_type} check)")
+            print("Checking warehouse stock...")
+
+        warehouse = get_warehouse_stock(product_sku=product_sku)
+        if warehouse:
+            append_warehouse_snapshot(warehouse)
+            if verbose:
+                print(
+                    f"  Warehouse: {warehouse['in_store_stock']} units, "
+                    f"${warehouse['price']} (MRP ${warehouse['mrp']})"
+                )
         else:
-            stores_to_skip.append(store)
+            if verbose:
+                print("  WARNING: Could not fetch warehouse stock")
 
-    if verbose:
-        print(f"\nChecking {len(stores_to_check)} stores "
-              f"(skipping {len(stores_to_skip)} unchanged stores)...")
+        latest_stock = get_latest_store_stock(product_sku=product_sku)
 
-    checked = 0
-    in_stock = 0
-    out_of_stock = 0
-    not_found = 0
-    all_rows = []  # Collect rows, write once at the end
-
-    for store in stores_to_check:
-        store_id = store["id"]
-        store_name = store.get("name", f"Store {store_id}")
-
-        result = get_store_stock(str(store_id))
-
-        if result and result["in_store_stock"] >= 0:
-            all_rows.append({
-                "batch_id": batch_id,
-                "store_id": store_id,
-                "store_name": store_name,
-                "store_type": store.get("storeType", ""),
-                "address": store.get("address", ""),
-                "lat": store.get("lat", 0),
-                "lng": store.get("lng", 0),
-                "in_store_stock": result["in_store_stock"],
-                "sap_stock": result["sap_stock"],
-                "price": result["price"],
-                "mrp": result["mrp"],
-                "product_sku": PRODUCT_SKU,
-            })
-            if result["in_store_stock"] > 0:
-                in_stock += 1
+        stores_to_check = []
+        stores_to_skip = []
+        for store in valid_stores:
+            sid = str(store["id"])
+            if _should_check_store(sid, latest_stock, run_count):
+                stores_to_check.append(store)
             else:
-                out_of_stock += 1
-        else:
+                stores_to_skip.append(store)
+
+        if verbose:
+            print(
+                f"Checking {len(stores_to_check)} stores "
+                f"(skipping {len(stores_to_skip)} unchanged stores)..."
+            )
+
+        checked = 0
+        in_stock = 0
+        out_of_stock = 0
+        not_found = 0
+
+        for store in stores_to_check:
+            store_id = store["id"]
+            store_name = store.get("name", f"Store {store_id}")
+
+            result = get_store_stock(str(store_id), product_sku=product_sku)
+
+            if result and result["in_store_stock"] >= 0:
+                all_rows.append({
+                    "batch_id": batch_id,
+                    "store_id": store_id,
+                    "store_name": store_name,
+                    "store_type": store.get("storeType", ""),
+                    "address": store.get("address", ""),
+                    "lat": store.get("lat", 0),
+                    "lng": store.get("lng", 0),
+                    "in_store_stock": result["in_store_stock"],
+                    "sap_stock": result["sap_stock"],
+                    "price": result["price"],
+                    "mrp": result["mrp"],
+                    "product_sku": product_sku,
+                })
+                if result["in_store_stock"] > 0:
+                    in_stock += 1
+                else:
+                    out_of_stock += 1
+            else:
+                all_rows.append({
+                    "batch_id": batch_id,
+                    "store_id": store_id,
+                    "store_name": store_name,
+                    "store_type": store.get("storeType", ""),
+                    "address": store.get("address", ""),
+                    "lat": store.get("lat", 0),
+                    "lng": store.get("lng", 0),
+                    "in_store_stock": -1,
+                    "sap_stock": -1,
+                    "price": 0,
+                    "mrp": 0,
+                    "product_sku": product_sku,
+                })
+                not_found += 1
+
+            checked += 1
+            if verbose and checked % 20 == 0:
+                print(f"  Checked {checked}/{len(stores_to_check)} stores...")
+
+            time.sleep(0.15)
+
+        for store in stores_to_skip:
+            sid = str(store["id"])
+            prev = latest_stock.get(sid, {})
             all_rows.append({
                 "batch_id": batch_id,
-                "store_id": store_id,
-                "store_name": store_name,
+                "store_id": store["id"],
+                "store_name": store.get("name", f"Store {sid}"),
                 "store_type": store.get("storeType", ""),
                 "address": store.get("address", ""),
                 "lat": store.get("lat", 0),
                 "lng": store.get("lng", 0),
-                "in_store_stock": -1,
-                "sap_stock": -1,
-                "price": 0,
-                "mrp": 0,
-                "product_sku": PRODUCT_SKU,
+                "in_store_stock": prev.get("in_store_stock", -1),
+                "sap_stock": prev.get("sap_stock", -1),
+                "price": prev.get("price", 0),
+                "mrp": prev.get("mrp", 0),
+                "product_sku": product_sku,
             })
-            not_found += 1
 
-        checked += 1
-        if verbose and checked % 20 == 0:
-            print(f"  Checked {checked}/{len(stores_to_check)} stores...")
+        product_messages.append(
+            f"{product_key}: checked {checked}/{len(valid_stores)} stores "
+            f"(skipped {len(stores_to_skip)}) - "
+            f"{in_stock} in stock, {out_of_stock} out of stock, {not_found} not found"
+        )
 
-        # Adaptive delay: 0.15s between calls (slightly faster with connection reuse)
-        time.sleep(0.15)
-
-    # For skipped stores, carry forward their last known data into this batch
-    for store in stores_to_skip:
-        sid = str(store["id"])
-        prev = latest_stock.get(sid, {})
-        all_rows.append({
-            "batch_id": batch_id,
-            "store_id": store["id"],
-            "store_name": store.get("name", f"Store {sid}"),
-            "store_type": store.get("storeType", ""),
-            "address": store.get("address", ""),
-            "lat": store.get("lat", 0),
-            "lng": store.get("lng", 0),
-            "in_store_stock": prev.get("in_store_stock", -1),
-            "sap_stock": prev.get("sap_stock", -1),
-            "price": prev.get("price", 0),
-            "mrp": prev.get("mrp", 0),
-            "product_sku": PRODUCT_SKU,
-        })
-
-    # Write all rows in a single API call instead of one per store
     append_store_stock_batch(all_rows)
 
-    msg = (f"Batch {batch_id}: Checked {checked}/{len(valid_stores)} stores "
-           f"(skipped {len(stores_to_skip)}) - "
-           f"{in_stock} in stock, {out_of_stock} out of stock, {not_found} not found")
+    msg = f"Batch {batch_id}: " + " | ".join(product_messages)
     if verbose:
         print(f"\n{msg}")
 

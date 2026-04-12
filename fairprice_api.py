@@ -8,13 +8,28 @@ Optimizations:
 - Single API call per store (INSTORE only; price from cache)
 """
 
+from __future__ import annotations
+
 import requests
 import time
 from typing import Optional
 
-PRODUCT_SKU = "13282313"
-PRODUCT_SLUG = "meiji-low-fat-high-protein-milk-chocolate-350ml-13282313"
-PRODUCT_NAME = "Meiji Low Fat High Protein Milk (Chocolate 350ml)"
+PRODUCTS = {
+    "chocolate": {
+        "sku": "13282313",
+        "slug": "meiji-low-fat-high-protein-milk-chocolate-350ml-13282313",
+        "name": "Meiji Low Fat High Protein Milk (Chocolate 350ml)",
+    },
+    "green_tea": {
+        "sku": "13282299",
+        "slug": "meiji-low-fat-high-protein-milk-green-tea-350ml-13282299",
+        "name": "Meiji Low Fat High Protein Milk (Green Tea 350ml)",
+    },
+}
+
+PRODUCT_SKU = PRODUCTS["chocolate"]["sku"]
+PRODUCT_SLUG = PRODUCTS["chocolate"]["slug"]
+PRODUCT_NAME = PRODUCTS["chocolate"]["name"]
 WAREHOUSE_STORE_ID = "165"
 
 USER_AGENT = (
@@ -26,10 +41,19 @@ USER_AGENT = (
 # Reusable session for TCP connection pooling
 _session: Optional[requests.Session] = None
 
-# Cached delivery price (rarely changes, fetched once per job run)
-_cached_price: Optional[dict] = None
-_price_fetched_at: float = 0
+# Cached delivery price (rarely changes, fetched once per product per hour)
+_cached_prices: dict[str, dict] = {}
+_price_fetched_at: dict[str, float] = {}
 PRICE_CACHE_TTL = 3600  # 1 hour
+
+
+def get_product_by_sku(product_sku: str) -> Optional[dict]:
+    """Return product metadata for a known SKU."""
+    sku = str(product_sku)
+    for product in PRODUCTS.values():
+        if product["sku"] == sku:
+            return product
+    return None
 
 def _get_session() -> requests.Session:
     """Get or create a reusable requests session with connection pooling."""
@@ -44,22 +68,24 @@ def _get_session() -> requests.Session:
         _session.mount("https://", adapter)
     return _session
 
-def _fetch_delivery_price() -> dict:
+def _fetch_delivery_price(product_sku: str = PRODUCT_SKU) -> dict:
     """
     Fetch the offer/sale price from the DELIVERY API.
     This is cached because the price rarely changes (maybe once a week).
     Returns {"price": float, "mrp": float, "discount": float}.
     """
-    global _cached_price, _price_fetched_at
+    product_sku = str(product_sku or PRODUCT_SKU)
 
     now = time.time()
-    if _cached_price and (now - _price_fetched_at) < PRICE_CACHE_TTL:
-        return _cached_price
+    cached_price = _cached_prices.get(product_sku)
+    fetched_at = _price_fetched_at.get(product_sku, 0)
+    if cached_price and (now - fetched_at) < PRICE_CACHE_TTL:
+        return cached_price
 
     session = _get_session()
     url = (
         f"https://website-api.omni.fairprice.com.sg/api/product/v2"
-        f"?storeId={WAREHOUSE_STORE_ID}&sku={PRODUCT_SKU}"
+        f"?storeId={WAREHOUSE_STORE_ID}&sku={product_sku}"
         f"&pageType=product-listing&orderType=DELIVERY"
     )
     try:
@@ -75,15 +101,19 @@ def _fetch_delivery_price() -> dict:
             offer_price = float(offers[0].get("price", mrp)) if offers else mrp
             discount = round(offer_price - mrp, 2) if offer_price and mrp else 0
 
-            _cached_price = {"price": offer_price, "mrp": mrp, "discount": discount}
-            _price_fetched_at = now
-            return _cached_price
+            _cached_prices[product_sku] = {
+                "price": offer_price,
+                "mrp": mrp,
+                "discount": discount,
+            }
+            _price_fetched_at[product_sku] = now
+            return _cached_prices[product_sku]
     except Exception:
         pass
 
     # Fallback if fetch fails
-    if _cached_price:
-        return _cached_price
+    if cached_price:
+        return cached_price
     return {"price": 0, "mrp": 0, "discount": 0}
 
 def search_by_postal_code(postal_code: str) -> dict:
@@ -129,18 +159,20 @@ def search_by_postal_code(postal_code: str) -> dict:
 
     return {"addresses": addresses, "stores": stores}
 
-def get_warehouse_stock() -> Optional[dict]:
+def get_warehouse_stock(product_sku: str = PRODUCT_SKU) -> Optional[dict]:
     """
     Fetch warehouse stock. Uses 1 API call for stock (INSTORE)
     + reuses cached price from DELIVERY (fetched once per hour).
     Total: 1 API call (or 2 if price cache expired).
     """
+    product_sku = str(product_sku or PRODUCT_SKU)
+    product = get_product_by_sku(product_sku) or {}
     session = _get_session()
 
     # 1. Get stock data from INSTORE API (1 call)
     url_instore = (
         f"https://website-api.omni.fairprice.com.sg/api/product/v2"
-        f"?storeId={WAREHOUSE_STORE_ID}&sku={PRODUCT_SKU}"
+        f"?storeId={WAREHOUSE_STORE_ID}&sku={product_sku}"
         f"&pageType=product-listing&orderType=INSTORE"
     )
     resp = session.get(url_instore, timeout=15)
@@ -156,11 +188,11 @@ def get_warehouse_stock() -> Optional[dict]:
     ssd = ssd[0] if ssd else {}
 
     # 2. Get price from cache (0 calls if cached, 1 call if expired)
-    price_data = _fetch_delivery_price()
+    price_data = _fetch_delivery_price(product_sku=product_sku)
 
     return {
-        "product_name": p.get("name", ""),
-        "product_sku": PRODUCT_SKU,
+        "product_name": p.get("name", "") or product.get("name", ""),
+        "product_sku": product_sku,
         "in_store_stock": int(ssd.get("inStoreStock", 0) or 0),
         "online_stock": int(ssd.get("onlineStock", 0) or 0),
         "sap_stock": int(ssd.get("sapStock", 0) or 0),
@@ -169,15 +201,16 @@ def get_warehouse_stock() -> Optional[dict]:
         "discount": price_data["discount"],
     }
 
-def get_store_stock(store_id: str) -> Optional[dict]:
+def get_store_stock(store_id: str, product_sku: str = PRODUCT_SKU) -> Optional[dict]:
     """
     Get real in-store stock for a specific store.
     Uses 1 API call (INSTORE only). Price comes from cache.
     """
+    product_sku = str(product_sku or PRODUCT_SKU)
     session = _get_session()
     url = (
         f"https://website-api.omni.fairprice.com.sg/api/product/v2"
-        f"?storeId={store_id}&sku={PRODUCT_SKU}"
+        f"?storeId={store_id}&sku={product_sku}"
         f"&pageType=product-listing&orderType=INSTORE"
     )
     try:
@@ -195,11 +228,11 @@ def get_store_stock(store_id: str) -> Optional[dict]:
         ssd = ssd[0] if ssd else {}
 
         # Use cached price instead of making another API call
-        price_data = _fetch_delivery_price()
+        price_data = _fetch_delivery_price(product_sku=product_sku)
 
         return {
             "store_id": store_id,
-            "product_sku": PRODUCT_SKU,
+            "product_sku": product_sku,
             "in_store_stock": int(ssd.get("inStoreStock", 0) or 0),
             "sap_stock": int(ssd.get("sapStock", 0) or 0),
             "price": price_data["price"],
