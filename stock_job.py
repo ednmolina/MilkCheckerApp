@@ -23,7 +23,7 @@ from fairprice_api import get_warehouse_stock, get_store_stock
 from data_store import (
     load_stores, save_stores_csv, append_warehouse_snapshot,
     append_store_stock, ensure_data_dir, generate_batch_id,
-    get_latest_store_stock, get_batch_ids, using_gsheets_backend, STORES_CSV,
+    get_latest_store_stock, STORES_CSV,
 )
 
 def _should_check_store(store_id: str, latest_stock: dict, run_count: int) -> bool:
@@ -53,15 +53,26 @@ def _should_check_store(store_id: str, latest_stock: dict, run_count: int) -> bo
 
 def _get_run_count() -> int:
     """
-    Track how many historical batches already exist.
+    Track how many times the job has run using a simple counter file.
     Returns the current run number (0-indexed).
     """
-    return len(get_batch_ids())
+    counter_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data", ".run_count")
+    count = 0
+    if os.path.exists(counter_file):
+        try:
+            with open(counter_file) as f:
+                count = int(f.read().strip())
+        except (ValueError, IOError):
+            count = 0
+
+    # Increment and save
+    with open(counter_file, "w") as f:
+        f.write(str(count + 1))
+
+    return count
 
 def _stores_csv_needs_update() -> bool:
-    """Check if the stores export needs to be refreshed."""
-    if using_gsheets_backend():
-        return True
+    """Check if stores.csv needs to be written (missing or older than stores.json)."""
     if not os.path.exists(STORES_CSV):
         return True
     stores_json = os.path.join(os.path.dirname(os.path.abspath(__file__)), "stores_with_coords.json")
