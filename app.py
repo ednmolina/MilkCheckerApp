@@ -25,10 +25,10 @@ from data_store import (
     load_stores, get_latest_store_stock, get_latest_warehouse,
     read_warehouse_history, read_store_stock_history,
     ensure_data_dir, get_batch_ids, get_batch_data,
-    haversine_km, read_csv_export,
+    haversine_km, read_csv_export, get_storage_backend_status,
     STORE_STOCK_CSV, WAREHOUSE_CSV, STORES_CSV,
 )
-from fairprice_api import search_by_postal_code
+from fairprice_api import PRODUCT_NAME, PRODUCT_SKU, search_by_postal_code
 from stock_job import run_stock_check
 
 # --- Page config ---------------------------------------------------------
@@ -39,7 +39,6 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-PRODUCT_NAME = "Meiji Low Fat High Protein Milk (Chocolate 350ml)"
 SG_CENTER = [1.3521, 103.8198]
 
 # --- Helpers -------------------------------------------------------------
@@ -204,27 +203,39 @@ def cached_load_stores():
 
 @st.cache_data(ttl=60)
 def cached_get_latest_store_stock():
-    return get_latest_store_stock()
+    return get_latest_store_stock(product_sku=PRODUCT_SKU)
 
 @st.cache_data(ttl=60)
 def cached_get_latest_warehouse():
-    return get_latest_warehouse()
+    return get_latest_warehouse(product_sku=PRODUCT_SKU)
 
 @st.cache_data(ttl=60)
 def cached_warehouse_history():
-    return read_warehouse_history()
+    return read_warehouse_history(product_sku=PRODUCT_SKU)
 
 @st.cache_data(ttl=60)
 def cached_store_stock_history():
-    return read_store_stock_history()
+    return read_store_stock_history(product_sku=PRODUCT_SKU)
 
 @st.cache_data(ttl=60)
 def cached_batch_ids():
-    return get_batch_ids()
+    return get_batch_ids(product_sku=PRODUCT_SKU)
 
 @st.cache_data(ttl=60)
 def cached_batch_data(batch_id):
-    return get_batch_data(batch_id)
+    return get_batch_data(batch_id, product_sku=PRODUCT_SKU)
+
+@st.cache_data(ttl=60)
+def cached_all_warehouse_history():
+    return read_warehouse_history()
+
+@st.cache_data(ttl=60)
+def cached_all_store_stock_history():
+    return read_store_stock_history()
+
+@st.cache_data(ttl=60)
+def cached_storage_status():
+    return get_storage_backend_status()
 
 @st.cache_data(ttl=300)
 def cached_postal_search(postal_code: str):
@@ -239,11 +250,16 @@ def cached_export_csv(path: str):
 # --- Pre-compute store stock data (used by sidebar + tabs) --------------
 all_stores = cached_load_stores()
 latest_stock = cached_get_latest_store_stock()
+all_store_history = cached_all_store_stock_history()
 store_history = cached_store_stock_history()
+all_warehouse_history = cached_all_warehouse_history()
+warehouse_history = cached_warehouse_history()
+storage_status = cached_storage_status()
 store_history_df = prepare_store_history_frame(store_history)
 store_movement_df = infer_store_movements(store_history_df)
 store_movement_summary = build_store_movement_summary(store_movement_df)
 inventory_totals_df = build_batch_totals(store_history_df, store_movement_df)
+legacy_product_data_present = bool((all_store_history or all_warehouse_history) and not (store_history or warehouse_history))
 
 stores_with_stock = []
 for store in all_stores:
@@ -269,6 +285,12 @@ not_avail_count = len([s for s in stores_with_stock if s["stock"] < 0])
 with st.sidebar:
     st.title("🥛 Meiji Milk Tracker")
     st.caption(PRODUCT_NAME)
+    backend_label = "Google Sheets" if storage_status["backend"] == "google_sheets" else "Local CSV"
+    st.caption(f"Backend: {backend_label}")
+    if storage_status["backend"] == "google_sheets":
+        st.caption(f"Source: {storage_status['source']}")
+    else:
+        st.caption(f"Path: {storage_status['data_dir']}")
     st.divider()
 
     # Warehouse stock summary
@@ -287,6 +309,9 @@ with st.sidebar:
         st.caption(f"Last checked: {warehouse.get('timestamp', 'N/A')} UTC")
     else:
         st.warning("No warehouse data yet. Run a stock check first.")
+
+    if legacy_product_data_present:
+        st.warning("Only legacy data from a different product is available. Run a fresh stock check to populate chocolate milk data.")
 
     st.divider()
 
@@ -345,13 +370,22 @@ with st.sidebar:
             )
 
     st.divider()
-    st.caption("Data stored in local CSVs or Google Sheets")
+    if storage_status["backend"] == "google_sheets":
+        st.caption("Google Sheets sync is active for this app instance.")
+    else:
+        st.caption("Google Sheets is not configured for this app instance. Writes are going to local CSV files.")
     st.caption("Stock data from FairPrice product/v2 API")
 
 # --- Main content -------------------------------------------------------
 tab_map, tab_history, tab_inventory = st.tabs([
     "📍 Store Finder", "📊 Stock History", "📈 Total Inventory"
 ])
+
+if legacy_product_data_present:
+    st.warning(
+        "This app is currently configured for chocolate milk, but the stored history belongs to an older product configuration. "
+        "Run `Run Stock Check Now` once to create a fresh chocolate-milk baseline."
+    )
 
 # --- Tab 1: Store Finder -----------------------------------------------
 with tab_map:
@@ -506,7 +540,7 @@ with tab_history:
     st.header("Stock History")
 
     # Warehouse history chart (cached read)
-    wh_history = cached_warehouse_history()
+    wh_history = warehouse_history
     if wh_history:
         st.subheader("Warehouse Stock Over Time")
         df_wh = pd.DataFrame(wh_history)

@@ -14,6 +14,7 @@ from typing import Optional
 
 PRODUCT_SKU = "13282313"
 PRODUCT_SLUG = "meiji-low-fat-high-protein-milk-chocolate-350ml-13282313"
+PRODUCT_NAME = "Meiji Low Fat High Protein Milk (Chocolate 350ml)"
 WAREHOUSE_STORE_ID = "165"
 
 USER_AGENT = (
@@ -159,6 +160,7 @@ def get_warehouse_stock() -> Optional[dict]:
 
     return {
         "product_name": p.get("name", ""),
+        "product_sku": PRODUCT_SKU,
         "in_store_stock": int(ssd.get("inStoreStock", 0) or 0),
         "online_stock": int(ssd.get("onlineStock", 0) or 0),
         "sap_stock": int(ssd.get("sapStock", 0) or 0),
@@ -197,6 +199,7 @@ def get_store_stock(store_id: str) -> Optional[dict]:
 
         return {
             "store_id": store_id,
+            "product_sku": PRODUCT_SKU,
             "in_store_stock": int(ssd.get("inStoreStock", 0) or 0),
             "sap_stock": int(ssd.get("sapStock", 0) or 0),
             "price": price_data["price"],

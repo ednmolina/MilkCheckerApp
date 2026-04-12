@@ -19,7 +19,7 @@ import json
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from fairprice_api import get_warehouse_stock, get_store_stock
+from fairprice_api import PRODUCT_SKU, get_warehouse_stock, get_store_stock
 from data_store import (
     load_stores, save_stores_csv, append_warehouse_snapshot,
     append_store_stock, ensure_data_dir, generate_batch_id,
@@ -56,7 +56,7 @@ def _get_run_count() -> int:
     Track how many historical batches already exist.
     Returns the current run number (0-indexed).
     """
-    return len(get_batch_ids())
+    return len(get_batch_ids(product_sku=PRODUCT_SKU))
 
 def _stores_csv_needs_update() -> bool:
     """Check if the stores export needs to be refreshed."""
@@ -113,7 +113,7 @@ def run_stock_check(verbose=True):
 
     # 2. Smart per-store stock check
     valid_stores = [s for s in stores if s.get("lat") and s.get("lng")]
-    latest_stock = get_latest_store_stock()
+    latest_stock = get_latest_store_stock(product_sku=PRODUCT_SKU)
 
     # Decide which stores to check this run
     stores_to_check = []
@@ -153,6 +153,7 @@ def run_stock_check(verbose=True):
                 sap_stock=result["sap_stock"],
                 price=result["price"],
                 mrp=result["mrp"],
+                product_sku=PRODUCT_SKU,
             )
             if result["in_store_stock"] > 0:
                 in_stock += 1
@@ -171,6 +172,7 @@ def run_stock_check(verbose=True):
                 sap_stock=-1,
                 price=0,
                 mrp=0,
+                product_sku=PRODUCT_SKU,
             )
             not_found += 1
 
@@ -197,6 +199,7 @@ def run_stock_check(verbose=True):
             sap_stock=prev.get("sap_stock", -1),
             price=prev.get("price", 0),
             mrp=prev.get("mrp", 0),
+            product_sku=PRODUCT_SKU,
         )
 
     msg = (f"Batch {batch_id}: Checked {checked}/{len(valid_stores)} stores "

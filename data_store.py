@@ -44,12 +44,12 @@ STORES_CSV = os.path.join(DATA_DIR, "stores.csv")
 
 STORE_STOCK_FIELDS = [
     "batch_id", "timestamp", "store_id", "store_name", "store_type", "address",
-    "lat", "lng", "in_store_stock", "sap_stock", "price", "mrp"
+    "lat", "lng", "in_store_stock", "sap_stock", "price", "mrp", "product_sku"
 ]
 
 WAREHOUSE_FIELDS = [
     "timestamp", "in_store_stock", "online_stock", "sap_stock",
-    "price", "mrp", "discount", "product_name"
+    "price", "mrp", "discount", "product_name", "product_sku"
 ]
 
 STORES_FIELDS = [
@@ -88,6 +88,30 @@ def _read_csv_cached(path: str) -> list[dict]:
 
     _csv_cache[path] = (mtime, rows)
     return rows
+
+
+def _rewrite_csv(path: str, fields: list[str], rows: list[dict]) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({field: row.get(field, "") for field in fields})
+
+
+def _ensure_csv_schema(path: str, fields: list[str]) -> None:
+    if not os.path.exists(path):
+        return
+
+    with open(path, newline="") as f:
+        reader = csv.DictReader(f)
+        existing_fields = reader.fieldnames or []
+        if existing_fields == fields:
+            return
+        rows = list(reader)
+
+    _rewrite_csv(path, fields, rows)
+    invalidate_cache()
 
 
 def _load_toml(path: str) -> dict:
@@ -142,6 +166,17 @@ def _get_gsheets_config() -> dict:
             _gsheets_config_cache = config
             return config
 
+    try:
+        import streamlit as st
+
+        streamlit_secrets = st.secrets.to_dict()
+        config = _extract_gsheets_config(streamlit_secrets)
+        if config.get("spreadsheet"):
+            _gsheets_config_cache = config
+            return config
+    except Exception:
+        pass
+
     _gsheets_config_cache = {}
     return _gsheets_config_cache
 
@@ -149,6 +184,35 @@ def _get_gsheets_config() -> dict:
 def using_gsheets_backend() -> bool:
     """Return True when Google Sheets is configured as the persistence backend."""
     return bool(_get_gsheets_config().get("spreadsheet"))
+
+
+def get_storage_backend_status() -> dict:
+    """Describe which persistence backend is active and how it was configured."""
+    config = _get_gsheets_config()
+    secrets_paths = [
+        os.path.join(_SCRIPT_DIR, ".streamlit", "secrets.toml"),
+        os.path.join(os.path.expanduser("~"), ".streamlit", "secrets.toml"),
+    ]
+    source = "local_csv"
+    if config.get("spreadsheet"):
+        if (
+            os.environ.get("GSHEETS_SPREADSHEET")
+            or os.environ.get("GSHEETS_SPREADSHEET_URL")
+            or os.environ.get("GOOGLE_SHEETS_SPREADSHEET")
+        ) and os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON"):
+            source = "environment"
+        elif any(os.path.exists(path) for path in secrets_paths):
+            source = next(path for path in secrets_paths if os.path.exists(path))
+        else:
+            source = "streamlit_secrets"
+
+    return {
+        "backend": "google_sheets" if config.get("spreadsheet") else "local_csv",
+        "configured": bool(config.get("spreadsheet")),
+        "source": source,
+        "spreadsheet": config.get("spreadsheet", ""),
+        "data_dir": DATA_DIR,
+    }
 
 
 def _normalize_private_key(value: str) -> str:
@@ -226,6 +290,37 @@ def _get_worksheet(title: str, fields: list[str], create_if_missing: bool) -> Op
     return worksheet
 
 
+def _ensure_sheet_schema(title: str, fields: list[str]) -> Optional[object]:
+    worksheet = _get_worksheet(title, fields, create_if_missing=True)
+    if worksheet is None:
+        return None
+
+    existing_fields = worksheet.row_values(1)
+    if existing_fields == fields:
+        return worksheet
+
+    values = worksheet.get_all_values()
+    headers = values[0] if values else []
+    rows = []
+    for raw_row in values[1:]:
+        row = {}
+        for idx, header in enumerate(headers):
+            if not header:
+                continue
+            row[header] = raw_row[idx] if idx < len(raw_row) else ""
+        rows.append(row)
+
+    worksheet.clear()
+    worksheet.append_row(fields, value_input_option="RAW")
+    if rows:
+        worksheet.append_rows(
+            [[row.get(field, "") for field in fields] for row in rows],
+            value_input_option="RAW",
+        )
+    invalidate_cache()
+    return worksheet
+
+
 def _rows_from_sheet(title: str, fields: list[str]) -> list[dict]:
     cached = _sheet_cache.get(title)
     now = time.time()
@@ -257,7 +352,7 @@ def _rows_from_sheet(title: str, fields: list[str]) -> list[dict]:
 
 
 def _append_sheet_row(title: str, fields: list[str], row: dict) -> None:
-    worksheet = _get_worksheet(title, fields, create_if_missing=True)
+    worksheet = _ensure_sheet_schema(title, fields)
     if worksheet is None:
         raise RuntimeError("Google Sheets backend is not available.")
 
@@ -267,7 +362,7 @@ def _append_sheet_row(title: str, fields: list[str], row: dict) -> None:
 
 
 def _replace_sheet_rows(title: str, fields: list[str], rows: list[dict]) -> None:
-    worksheet = _get_worksheet(title, fields, create_if_missing=True)
+    worksheet = _ensure_sheet_schema(title, fields)
     if worksheet is None:
         raise RuntimeError("Google Sheets backend is not available.")
 
@@ -297,6 +392,12 @@ def _read_store_rows() -> list[dict]:
     if using_gsheets_backend():
         return _rows_from_sheet(_worksheet_title("stores"), STORES_FIELDS)
     return _read_csv_cached(STORES_CSV)
+
+
+def _filter_rows_by_product(rows: list[dict], product_sku: Optional[str]) -> list[dict]:
+    if not product_sku:
+        return rows
+    return [row for row in rows if str(row.get("product_sku", "")).strip() == product_sku]
 
 
 def _csv_text_from_rows(fields: list[str], rows: list[dict]) -> str:
@@ -348,9 +449,9 @@ def _init_csv(path, fields):
         return
     if not os.path.exists(path):
         ensure_data_dir()
-        with open(path, "w", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=fields)
-            writer.writeheader()
+        _rewrite_csv(path, fields, [])
+        return
+    _ensure_csv_schema(path, fields)
 
 
 def generate_batch_id():
@@ -410,6 +511,7 @@ def append_warehouse_snapshot(data):
         "mrp": data.get("mrp", 0),
         "discount": data.get("discount", 0),
         "product_name": data.get("product_name", ""),
+        "product_sku": data.get("product_sku", ""),
     }
 
     if using_gsheets_backend():
@@ -423,9 +525,9 @@ def append_warehouse_snapshot(data):
     invalidate_cache()
 
 
-def read_warehouse_history():
+def read_warehouse_history(product_sku: Optional[str] = None):
     """Read all warehouse history from the active backend."""
-    rows = _read_warehouse_rows()
+    rows = _filter_rows_by_product(_read_warehouse_rows(), product_sku)
     parsed = []
     for r in rows:
         row = dict(r)
@@ -433,13 +535,14 @@ def read_warehouse_history():
             row[k] = int(float(row.get(k, 0) or 0))
         for k in ["price", "mrp", "discount"]:
             row[k] = float(row.get(k, 0) or 0)
+        row["product_sku"] = str(row.get("product_sku", "") or "")
         parsed.append(row)
     return parsed
 
 
-def get_latest_warehouse():
+def get_latest_warehouse(product_sku: Optional[str] = None):
     """Get the most recent warehouse snapshot."""
-    history = read_warehouse_history()
+    history = read_warehouse_history(product_sku=product_sku)
     if history:
         return history[-1]
     return None
@@ -448,7 +551,7 @@ def get_latest_warehouse():
 # --- Store stock ----------------------------------------------
 
 def append_store_stock(batch_id, store_id, store_name, store_type, address, lat, lng,
-                       in_store_stock, sap_stock, price, mrp):
+                       in_store_stock, sap_stock, price, mrp, product_sku=""):
     """Append a per-store stock snapshot with batch_id for grouping."""
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
     row = {
@@ -464,6 +567,7 @@ def append_store_stock(batch_id, store_id, store_name, store_type, address, lat,
         "sap_stock": sap_stock,
         "price": price,
         "mrp": mrp,
+        "product_sku": product_sku,
     }
 
     if using_gsheets_backend():
@@ -488,22 +592,23 @@ def _parse_store_stock_rows(rows: list[dict]) -> list[dict]:
         row["mrp"] = float(row.get("mrp", 0) or 0)
         row["lat"] = float(row.get("lat", 0) or 0)
         row["lng"] = float(row.get("lng", 0) or 0)
+        row["product_sku"] = str(row.get("product_sku", "") or "")
         parsed.append(row)
     return parsed
 
 
-def read_store_stock_history():
+def read_store_stock_history(product_sku: Optional[str] = None):
     """Read all store stock history from the active backend."""
-    return _parse_store_stock_rows(_read_store_stock_rows())
+    return _parse_store_stock_rows(_filter_rows_by_product(_read_store_stock_rows(), product_sku))
 
 
-def get_latest_store_stock():
+def get_latest_store_stock(product_sku: Optional[str] = None):
     """
     Get the most recent stock snapshot for each store.
     Optimized: scans from the end of the active dataset to find the latest batch,
     then only parses rows from that batch.
     """
-    rows = _read_store_stock_rows()
+    rows = _filter_rows_by_product(_read_store_stock_rows(), product_sku)
     if not rows:
         return {}
 
@@ -527,17 +632,18 @@ def get_latest_store_stock():
             parsed["mrp"] = float(parsed.get("mrp", 0) or 0)
             parsed["lat"] = float(parsed.get("lat", 0) or 0)
             parsed["lng"] = float(parsed.get("lng", 0) or 0)
+            parsed["product_sku"] = str(parsed.get("product_sku", "") or "")
             latest[str(parsed["store_id"])] = parsed
 
     return latest
 
 
-def get_batch_ids():
+def get_batch_ids(product_sku: Optional[str] = None):
     """
     Get all unique batch IDs sorted by time (newest first).
     Optimized: only reads the batch_id column.
     """
-    rows = _read_store_stock_rows()
+    rows = _filter_rows_by_product(_read_store_stock_rows(), product_sku)
     batches = sorted(
         set(r.get("batch_id", "") for r in rows if r.get("batch_id")),
         reverse=True,
@@ -545,9 +651,12 @@ def get_batch_ids():
     return batches
 
 
-def get_batch_data(batch_id):
+def get_batch_data(batch_id, product_sku: Optional[str] = None):
     """Get all store stock data for a specific batch."""
-    batch_rows = [r for r in _read_store_stock_rows() if r.get("batch_id") == batch_id]
+    batch_rows = [
+        r for r in _filter_rows_by_product(_read_store_stock_rows(), product_sku)
+        if r.get("batch_id") == batch_id
+    ]
     return _parse_store_stock_rows(batch_rows)
 
 
