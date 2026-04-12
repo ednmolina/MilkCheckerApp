@@ -69,6 +69,7 @@ _gsheets_config_cache: Optional[dict] = None
 _gsheets_client = None
 _gsheets_workbook = None
 _worksheet_initialized: set[str] = set()  # tracks worksheets whose headers have been verified
+_worksheet_cache: dict[str, object] = {}  # caches worksheet objects to avoid fetch_sheet_metadata on every call
 
 
 def _read_csv_cached(path: str) -> list[dict]:
@@ -278,12 +279,16 @@ def _get_worksheet(title: str, fields: list[str], create_if_missing: bool) -> Op
     if workbook is None:
         return None
 
-    try:
-        worksheet = workbook.worksheet(title)
-    except WorksheetNotFound:
-        if not create_if_missing:
-            return None
-        worksheet = workbook.add_worksheet(title=title, rows=1000, cols=max(len(fields), 8))
+    if title not in _worksheet_cache:
+        try:
+            worksheet = workbook.worksheet(title)
+        except WorksheetNotFound:
+            if not create_if_missing:
+                return None
+            worksheet = workbook.add_worksheet(title=title, rows=1000, cols=max(len(fields), 8))
+        _worksheet_cache[title] = worksheet
+
+    worksheet = _worksheet_cache[title]
 
     if fields and title not in _worksheet_initialized:
         if not worksheet.row_values(1):
@@ -442,6 +447,7 @@ def invalidate_cache():
     _csv_cache.clear()
     _sheet_cache.clear()
     _worksheet_initialized.clear()
+    _worksheet_cache.clear()
 
 
 # --- Directory & init -----------------------------------------
