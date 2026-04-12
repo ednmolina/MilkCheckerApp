@@ -282,20 +282,18 @@ def _get_worksheet(title: str, fields: list[str], create_if_missing: bool) -> Op
     if title not in _worksheet_cache:
         try:
             worksheet = workbook.worksheet(title)
+            # Existing worksheet — assume headers are already correct, no read needed
+            _worksheet_initialized.add(title)
         except WorksheetNotFound:
             if not create_if_missing:
                 return None
             worksheet = workbook.add_worksheet(title=title, rows=1000, cols=max(len(fields), 8))
+            if fields:
+                worksheet.append_row(fields, value_input_option="RAW")
+            _worksheet_initialized.add(title)
         _worksheet_cache[title] = worksheet
 
-    worksheet = _worksheet_cache[title]
-
-    if fields and title not in _worksheet_initialized:
-        if not worksheet.row_values(1):
-            worksheet.append_row(fields, value_input_option="RAW")
-        _worksheet_initialized.add(title)
-
-    return worksheet
+    return _worksheet_cache[title]
 
 
 def _ensure_sheet_schema(title: str, fields: list[str]) -> Optional[object]:
@@ -303,7 +301,7 @@ def _ensure_sheet_schema(title: str, fields: list[str]) -> Optional[object]:
     if worksheet is None:
         return None
 
-    # Skip the schema check if we already verified this worksheet's headers
+    # Schema is verified at worksheet creation time; no extra reads needed
     if title in _worksheet_initialized:
         return worksheet
 
