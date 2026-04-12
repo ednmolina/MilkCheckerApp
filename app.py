@@ -20,7 +20,6 @@ import pandas as pd
 import time
 import os
 import sys
-from datetime import datetime
 from zoneinfo import ZoneInfo
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -30,7 +29,7 @@ from data_store import (
     read_warehouse_history, read_store_stock_history,
     get_batch_ids, get_batch_data,
     haversine_km, read_csv_export, get_storage_backend_status,
-    parse_stored_timestamp, format_timestamp_dual,
+    parse_stored_timestamp, format_timestamp_for_timezone,
     STORE_STOCK_CSV, WAREHOUSE_CSV, STORES_CSV,
 )
 from fairprice_api import PRODUCTS, search_by_postal_code
@@ -58,11 +57,14 @@ selected_product_sku = selected_product["sku"]
 selected_product_name = selected_product["name"]
 
 # --- Timezone setup -----------------------------------------------------
-_TZ_OPTIONS = {"🇸🇬 Singapore": "Asia/Singapore", "🇺🇸 New York": "America/New_York"}
+_TZ_OPTIONS = {"🇺🇸 New York": "America/New_York", "🇸🇬 Singapore": "Asia/Singapore"}
+_DEFAULT_TZ_LABEL = "🇺🇸 New York"
 
-# Read from session state (set by the radio widget below); default to Singapore
-_tz_label = st.session_state.get("display_tz", "🇸🇬 Singapore")
-_display_tz = ZoneInfo(_TZ_OPTIONS.get(_tz_label, "Asia/Singapore"))
+if st.session_state.get("display_tz") not in _TZ_OPTIONS:
+    st.session_state["display_tz"] = _DEFAULT_TZ_LABEL
+
+_tz_label = st.session_state["display_tz"]
+_display_tz = ZoneInfo(_TZ_OPTIONS[_tz_label])
 
 # --- Helpers -------------------------------------------------------------
 def stock_color(stock: int) -> str:
@@ -93,11 +95,6 @@ def convert_timestamp_series(values: pd.Series, target_tz: ZoneInfo) -> pd.Serie
     """Parse mixed legacy/current timestamp strings and convert for charting."""
     parsed = values.apply(parse_stored_timestamp)
     return pd.to_datetime(parsed, utc=True, errors="coerce").dt.tz_convert(target_tz)
-
-
-def fmt_ts(ts_str: str) -> str:
-    """Show Last Checked timestamps in both Singapore and New York time."""
-    return format_timestamp_dual(ts_str)
 
 
 def prepare_store_history_frame(history_rows: list[dict]) -> pd.DataFrame:
@@ -346,7 +343,10 @@ with st.sidebar:
             col2.metric("MRP", f"${float(mrp):.2f}")
             if discount and float(discount) < 0:
                 st.success(f"Save ${abs(float(discount)):.2f}")
-        st.caption(f"Last checked on: {fmt_ts(warehouse.get('timestamp', 'N/A'))}")
+        st.caption(
+            f"Last checked on: "
+            f"{format_timestamp_for_timezone(warehouse.get('timestamp', 'N/A'), _display_tz)}"
+        )
     else:
         st.warning("No warehouse data yet. Run a stock check first.")
 
@@ -417,37 +417,15 @@ with st.sidebar:
     st.caption("Stock data from FairPrice product/v2 API")
 
 # --- Timezone toggle (top of page, mobile-friendly) ---------------------
-_TZ_OPTIONS = {"🇸🇬 Singapore": "Asia/Singapore", "🇺🇸 New York": "America/New_York"}
-_STORED_TZ = ZoneInfo("America/New_York")  # timestamps are stored in Eastern time
-
 tz_col, _ = st.columns([2, 5])
 with tz_col:
-    _tz_label = st.radio(
+    st.radio(
         "Display timezone",
         list(_TZ_OPTIONS.keys()),
         horizontal=True,
         label_visibility="collapsed",
         key="display_tz",
     )
-_display_tz = ZoneInfo(_TZ_OPTIONS[_tz_label])
-
-
-def fmt_ts(ts_str: str, show_tz: bool = True) -> str:
-    """Convert a stored Eastern timestamp string to the selected display timezone."""
-    if not ts_str or ts_str in ("Never", "N/A", ""):
-        return str(ts_str)
-    try:
-        dt = datetime.strptime(str(ts_str)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_STORED_TZ)
-        converted = dt.astimezone(_display_tz)
-        suffix = f" {converted.strftime('%Z')}" if show_tz else ""
-        return converted.strftime("%Y-%m-%d %H:%M:%S") + suffix
-    except Exception:
-        return str(ts_str)
-
-
-def fmt_ts_df(series: pd.Series) -> pd.Series:
-    """Convert a pandas Series of timestamp strings to the display timezone."""
-    return series.apply(lambda x: fmt_ts(x, show_tz=False))
 
 
 # --- Main content -------------------------------------------------------
@@ -562,7 +540,7 @@ with tab_map:
             <hr style="margin:4px 0">
             <b>Stock: {label}</b><br>
             <small>{store.get('address', '')}</small><br>
-            <small>Last checked on: {fmt_ts(store.get('last_checked', 'Never'))}</small>
+            <small>Last checked on: {format_timestamp_for_timezone(store.get('last_checked', 'Never'), _display_tz)}</small>
         </div>
         """
 
@@ -602,7 +580,7 @@ with tab_map:
                 "Stock Status": status_str,
                 "Units": stock if stock >= 0 else None,
                 "Address": s.get("address", ""),
-                "Last Checked On": fmt_ts(s.get("last_checked", "Never")),
+                "Last Checked On": format_timestamp_for_timezone(s.get("last_checked", "Never"), _display_tz),
             }
             if "distance_km" in s:
                 row["Distance"] = f"{s['distance_km']:.1f} km"
@@ -651,7 +629,12 @@ with tab_history:
             selected_store = st.selectbox("Select a store:", store_names)
             store_data = store_history_df[store_history_df["store_name"] == selected_store].sort_values("timestamp").copy()
             store_data["timestamp"] = convert_timestamp_series(store_data["timestamp"], _display_tz)
-            store_moves = store_movement_df[store_movement_df["store_name"] == selected_store].sort_values("timestamp")
+            store_moves = (
+                store_movement_df[store_movement_df["store_name"] == selected_store]
+                .sort_values("timestamp")
+                .copy()
+            )
+            store_moves["timestamp"] = store_moves["timestamp"].dt.tz_convert(_display_tz)
 
             if not store_data.empty:
                 latest_store_row = store_data.iloc[-1]
@@ -715,7 +698,7 @@ with tab_history:
                     "In-Store Stock": stock,
                     "SAP Stock": data.get("sap_stock", 0),
                     "Price": f"${float(data.get('price', 0)):.2f}" if data.get("price") else "-",
-                    "Last Checked On": fmt_ts(data.get("timestamp", "")),
+                    "Last Checked On": format_timestamp_for_timezone(data.get("timestamp", ""), _display_tz),
                 })
         if rows:
             df_latest = pd.DataFrame(rows)
