@@ -25,7 +25,7 @@ from data_store import (
     load_stores, get_latest_store_stock, get_latest_warehouse,
     read_warehouse_history, read_store_stock_history,
     ensure_data_dir, get_batch_ids, get_batch_data,
-    haversine_km, read_csv_export,
+    haversine_km,
     STORE_STOCK_CSV, WAREHOUSE_CSV, STORES_CSV,
 )
 from fairprice_api import search_by_postal_code
@@ -232,9 +232,12 @@ def cached_postal_search(postal_code: str):
     return search_by_postal_code(postal_code)
 
 @st.cache_data(ttl=60)
-def cached_export_csv(path: str):
-    """Cache CSV exports for download buttons."""
-    return read_csv_export(path)
+def cached_read_csv_file(path: str):
+    """Cache CSV file reads for download buttons."""
+    if os.path.exists(path):
+        with open(path, "r") as f:
+            return f.read()
+    return None
 
 # --- Pre-compute store stock data (used by sidebar + tabs) --------------
 all_stores = cached_load_stores()
@@ -334,7 +337,7 @@ with st.sidebar:
         ("Warehouse History", WAREHOUSE_CSV),
         ("Store List", STORES_CSV),
     ]:
-        content = cached_export_csv(path)
+        content = cached_read_csv_file(path)
         if content:
             st.download_button(
                 label=label,
