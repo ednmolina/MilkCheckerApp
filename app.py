@@ -10,6 +10,8 @@ Optimizations:
 - Form-based search to prevent re-runs on keystroke
 """
 
+from __future__ import annotations
+
 import streamlit as st
 import folium
 from folium.plugins import MarkerCluster

@@ -6,6 +6,8 @@ If Google Sheets credentials are available via .streamlit/secrets.toml or
 environment variables, the same API transparently uses Google Sheets instead.
 """
 
+from __future__ import annotations
+
 import csv
 import io
 import json
