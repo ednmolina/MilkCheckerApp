@@ -444,8 +444,8 @@ def invalidate_cache():
     """Clear in-memory caches (call after writes)."""
     _csv_cache.clear()
     _sheet_cache.clear()
-    _worksheet_initialized.clear()
-    _worksheet_cache.clear()
+    # Do NOT clear _worksheet_cache or _worksheet_initialized — worksheet objects
+    # remain valid after writes and re-fetching them costs API quota.
 
 
 # --- Directory & init -----------------------------------------
