@@ -25,17 +25,17 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from data_store import (
     load_stores, get_latest_store_stock, get_latest_warehouse,
     read_warehouse_history, read_store_stock_history,
-    ensure_data_dir, get_batch_ids, get_batch_data,
+    get_batch_ids, get_batch_data,
     haversine_km, read_csv_export, get_storage_backend_status,
     parse_stored_timestamp, format_timestamp_dual,
     STORE_STOCK_CSV, WAREHOUSE_CSV, STORES_CSV,
 )
-from fairprice_api import PRODUCT_NAME, PRODUCT_SKU, search_by_postal_code
+from fairprice_api import PRODUCTS, search_by_postal_code
 from stock_job import run_stock_check
 
 # --- Page config ---------------------------------------------------------
 st.set_page_config(
-    page_title="FairPrice Meiji Milk Tracker",
+    page_title="FairPrice Meiji Protein Milk Tracker",
     page_icon="🥛",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -43,6 +43,16 @@ st.set_page_config(
 
 SG_CENTER = [1.3521, 103.8198]
 _UTC = ZoneInfo("UTC")
+DEFAULT_PRODUCT_KEY = "chocolate"
+PRODUCT_KEYS = list(PRODUCTS.keys())
+
+if st.session_state.get("selected_product_key") not in PRODUCTS:
+    st.session_state["selected_product_key"] = DEFAULT_PRODUCT_KEY
+
+selected_product_key = st.session_state["selected_product_key"]
+selected_product = PRODUCTS[selected_product_key]
+selected_product_sku = selected_product["sku"]
+selected_product_name = selected_product["name"]
 
 # --- Timezone setup -----------------------------------------------------
 _TZ_OPTIONS = {"🇸🇬 Singapore": "Asia/Singapore", "🇺🇸 New York": "America/New_York"}
@@ -222,28 +232,28 @@ def cached_load_stores():
     return load_stores()
 
 @st.cache_data(ttl=60)
-def cached_get_latest_store_stock():
-    return get_latest_store_stock(product_sku=PRODUCT_SKU)
+def cached_get_latest_store_stock(product_sku: str):
+    return get_latest_store_stock(product_sku=product_sku)
 
 @st.cache_data(ttl=60)
-def cached_get_latest_warehouse():
-    return get_latest_warehouse(product_sku=PRODUCT_SKU)
+def cached_get_latest_warehouse(product_sku: str):
+    return get_latest_warehouse(product_sku=product_sku)
 
 @st.cache_data(ttl=60)
-def cached_warehouse_history():
-    return read_warehouse_history(product_sku=PRODUCT_SKU)
+def cached_warehouse_history(product_sku: str):
+    return read_warehouse_history(product_sku=product_sku)
 
 @st.cache_data(ttl=60)
-def cached_store_stock_history():
-    return read_store_stock_history(product_sku=PRODUCT_SKU)
+def cached_store_stock_history(product_sku: str):
+    return read_store_stock_history(product_sku=product_sku)
 
 @st.cache_data(ttl=60)
-def cached_batch_ids():
-    return get_batch_ids(product_sku=PRODUCT_SKU)
+def cached_batch_ids(product_sku: str):
+    return get_batch_ids(product_sku=product_sku)
 
 @st.cache_data(ttl=60)
-def cached_batch_data(batch_id):
-    return get_batch_data(batch_id, product_sku=PRODUCT_SKU)
+def cached_batch_data(batch_id: str, product_sku: str):
+    return get_batch_data(batch_id, product_sku=product_sku)
 
 @st.cache_data(ttl=60)
 def cached_all_warehouse_history():
@@ -269,11 +279,11 @@ def cached_export_csv(path: str):
 
 # --- Pre-compute store stock data (used by sidebar + tabs) --------------
 all_stores = cached_load_stores()
-latest_stock = cached_get_latest_store_stock()
+latest_stock = cached_get_latest_store_stock(selected_product_sku)
 all_store_history = cached_all_store_stock_history()
-store_history = cached_store_stock_history()
+store_history = cached_store_stock_history(selected_product_sku)
 all_warehouse_history = cached_all_warehouse_history()
-warehouse_history = cached_warehouse_history()
+warehouse_history = cached_warehouse_history(selected_product_sku)
 storage_status = cached_storage_status()
 store_history_df = prepare_store_history_frame(store_history)
 store_movement_df = infer_store_movements(store_history_df)
@@ -303,8 +313,15 @@ not_avail_count = len([s for s in stores_with_stock if s["stock"] < 0])
 
 # --- Sidebar ------------------------------------------------------------
 with st.sidebar:
-    st.title("🥛 Meiji Milk Tracker")
-    st.caption(PRODUCT_NAME)
+    st.title("🥛 Meiji Protein Milk Tracker")
+    st.selectbox(
+        "Product",
+        PRODUCT_KEYS,
+        index=PRODUCT_KEYS.index(selected_product_key),
+        format_func=lambda key: PRODUCTS[key]["name"],
+        key="selected_product_key",
+    )
+    st.caption(selected_product_name)
     backend_label = "Google Sheets" if storage_status["backend"] == "google_sheets" else "Local CSV"
     st.caption(f"Backend: {backend_label}")
     if storage_status["backend"] == "google_sheets":
@@ -314,7 +331,7 @@ with st.sidebar:
     st.divider()
 
     # Warehouse stock summary
-    warehouse = cached_get_latest_warehouse()
+    warehouse = cached_get_latest_warehouse(selected_product_sku)
     if warehouse:
         st.metric("Warehouse Stock", f"{warehouse['in_store_stock']} units")
         price = warehouse.get("price", 0)
@@ -331,7 +348,7 @@ with st.sidebar:
         st.warning("No warehouse data yet. Run a stock check first.")
 
     if legacy_product_data_present:
-        st.warning("Only legacy data from a different product is available. Run a fresh stock check to populate chocolate milk data.")
+        st.warning(f"Only other-product history is available. Run a fresh stock check to populate {selected_product_name} data.")
 
     st.divider()
 
@@ -354,7 +371,7 @@ with st.sidebar:
     # Stock check controls
     st.subheader("🔄 Stock Check")
     if st.button("Run Stock Check Now", use_container_width=True, type="primary"):
-        with st.spinner("Checking stores... (this takes ~30-60s)"):
+        with st.spinner("Checking both products... (this takes ~60-120s)"):
             result = run_stock_check(verbose=False)
         if result.get("success"):
             st.success(result["message"])
@@ -365,7 +382,7 @@ with st.sidebar:
             st.error(result.get("message", "Failed"))
 
     # Show batch info (cached)
-    batches = cached_batch_ids()
+    batches = cached_batch_ids(selected_product_sku)
     if batches:
         st.caption(f"Latest batch: {batches[0]}")
         st.caption(f"Total batches: {len(batches)}")
@@ -408,19 +425,23 @@ with tz_col:
     )
 
 # --- Main content -------------------------------------------------------
+st.title("FairPrice Meiji Protein Milk Tracker")
+st.caption(f"Viewing: {selected_product_name}")
+
 tab_map, tab_history, tab_inventory = st.tabs([
     "📍 Store Finder", "📊 Stock History", "📈 Total Inventory"
 ])
 
 if legacy_product_data_present:
     st.warning(
-        "This app is currently configured for chocolate milk, but the stored history belongs to an older product configuration. "
-        "Run `Run Stock Check Now` once to create a fresh chocolate-milk baseline."
+        f"No stored history exists yet for {selected_product_name}. "
+        "Run `Run Stock Check Now` once to create a fresh baseline."
     )
 
 # --- Tab 1: Store Finder -----------------------------------------------
 with tab_map:
     st.header("Store Finder")
+    st.caption(selected_product_name)
 
     # Postal code search - form prevents re-runs on keystroke
     with st.form("search_form", clear_on_submit=False):
@@ -569,6 +590,7 @@ with tab_map:
 # --- Tab 2: Stock History ----------------------------------------------
 with tab_history:
     st.header("Stock History")
+    st.caption(selected_product_name)
 
     # Warehouse history chart (cached read)
     wh_history = warehouse_history
@@ -636,10 +658,10 @@ with tab_history:
 
     # Batch comparison (cached)
     st.subheader("Batch Comparison")
-    batches = cached_batch_ids()
+    batches = cached_batch_ids(selected_product_sku)
     if batches:
         selected_batch = st.selectbox("Select a batch:", batches, index=0)
-        batch_data = cached_batch_data(selected_batch)
+        batch_data = cached_batch_data(selected_batch, selected_product_sku)
         if batch_data:
             df_batch = prepare_store_history_frame(batch_data)
             in_stock_b = len(df_batch[df_batch["in_store_stock"] > 0])
@@ -682,6 +704,7 @@ with tab_history:
 # --- Tab 3: Total Inventory --------------------------------------------
 with tab_inventory:
     st.header("Total Inventory Over Time")
+    st.caption(selected_product_name)
     st.caption("Tracks the combined inventory across all FairPrice stores for each stock check batch.")
     st.caption("Sales inference is conservative: stock drops count as minimum units sold, while stock increases count as minimum restocks.")
 
@@ -699,7 +722,7 @@ with tab_inventory:
             c4.metric("Avg Stock / Store", f"{latest_row['avg_stock_per_store']:.1f}")
 
             # Add warehouse stock for context
-            wh = cached_get_latest_warehouse()
+            wh = cached_get_latest_warehouse(selected_product_sku)
             if wh:
                 combined = int(latest_row["total_units"]) + int(wh["in_store_stock"])
                 st.info(f"**Combined Inventory (Stores + Warehouse):** {combined:,} units "
