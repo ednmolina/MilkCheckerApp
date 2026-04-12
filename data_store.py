@@ -1,19 +1,31 @@
 """
-CSV-only data storage for FairPrice stock tracker.
-No SQLite - all data persisted as CSV files in the data/ directory.
+Storage helpers for the FairPrice stock tracker.
 
-Optimizations:
-- _read_csv_cached() reads a file once and caches by mtime
-- get_latest_store_stock() reads only the latest batch (not all history)
-- get_batch_ids() scans only the batch_id column, not full rows
+By default, data is stored as CSV files in the local data/ directory.
+If Google Sheets credentials are available via .streamlit/secrets.toml or
+environment variables, the same API transparently uses Google Sheets instead.
 """
 
 import csv
-import os
+import io
 import json
 import math
+import os
+import time
 from datetime import datetime, timezone
 from typing import Optional
+
+try:
+    import tomllib
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11
+    import tomli as tomllib
+
+try:
+    import gspread
+    from gspread.exceptions import WorksheetNotFound
+except ImportError:  # pragma: no cover - optional dependency until configured
+    gspread = None
+    WorksheetNotFound = Exception
 
 # If MEIJI_APP_BUNDLE is set (by the .app launcher), save to ~/Documents/
 # Otherwise save to the project's local data/ folder
@@ -44,15 +56,24 @@ STORES_FIELDS = [
     "id", "name", "address", "lat", "lng", "postal_code", "store_type", "zone_id"
 ]
 
-# --- In-memory cache keyed by (filepath, mtime) ---
+_EXPORT_FIELDS_BY_PATH = {
+    STORE_STOCK_CSV: STORE_STOCK_FIELDS,
+    WAREHOUSE_CSV: WAREHOUSE_FIELDS,
+    STORES_CSV: STORES_FIELDS,
+}
+
+# --- In-memory cache keyed by (filepath, mtime) or worksheet title --------
 _csv_cache: dict[str, tuple[float, list[dict]]] = {}
+_sheet_cache: dict[str, tuple[float, list[dict]]] = {}
+_gsheets_config_cache: Optional[dict] = None
+_gsheets_client = None
+_gsheets_workbook = None
 
 
 def _read_csv_cached(path: str) -> list[dict]:
     """
     Read a CSV file and cache the result. Returns cached data if the file
-    hasn't been modified since last read. Avoids re-reading the same file
-    multiple times per render cycle.
+    hasn't been modified since last read.
     """
     if not os.path.exists(path):
         return []
@@ -69,19 +90,262 @@ def _read_csv_cached(path: str) -> list[dict]:
     return rows
 
 
+def _load_toml(path: str) -> dict:
+    with open(path, "rb") as f:
+        return tomllib.load(f)
+
+
+def _extract_gsheets_config(raw: dict) -> dict:
+    if not raw:
+        return {}
+
+    if isinstance(raw.get("gsheets"), dict):
+        return dict(raw["gsheets"])
+
+    connections = raw.get("connections", {})
+    if isinstance(connections, dict) and isinstance(connections.get("gsheets"), dict):
+        return dict(connections["gsheets"])
+
+    return {}
+
+
+def _get_gsheets_config() -> dict:
+    global _gsheets_config_cache
+
+    if _gsheets_config_cache is not None:
+        return _gsheets_config_cache
+
+    env_spreadsheet = (
+        os.environ.get("GSHEETS_SPREADSHEET")
+        or os.environ.get("GSHEETS_SPREADSHEET_URL")
+        or os.environ.get("GOOGLE_SHEETS_SPREADSHEET")
+    )
+    env_service_account = os.environ.get("GOOGLE_SERVICE_ACCOUNT_JSON")
+    if env_spreadsheet and env_service_account:
+        config = json.loads(env_service_account)
+        config["spreadsheet"] = env_spreadsheet
+        config["worksheet_store_stock"] = os.environ.get("GSHEETS_WORKSHEET_STORE_STOCK", "store_stock_history")
+        config["worksheet_warehouse"] = os.environ.get("GSHEETS_WORKSHEET_WAREHOUSE", "warehouse_history")
+        config["worksheet_stores"] = os.environ.get("GSHEETS_WORKSHEET_STORES", "stores")
+        _gsheets_config_cache = config
+        return config
+
+    secrets_paths = [
+        os.path.join(_SCRIPT_DIR, ".streamlit", "secrets.toml"),
+        os.path.join(os.path.expanduser("~"), ".streamlit", "secrets.toml"),
+    ]
+    for path in secrets_paths:
+        if not os.path.exists(path):
+            continue
+        config = _extract_gsheets_config(_load_toml(path))
+        if config.get("spreadsheet"):
+            _gsheets_config_cache = config
+            return config
+
+    _gsheets_config_cache = {}
+    return _gsheets_config_cache
+
+
+def using_gsheets_backend() -> bool:
+    """Return True when Google Sheets is configured as the persistence backend."""
+    return bool(_get_gsheets_config().get("spreadsheet"))
+
+
+def _normalize_private_key(value: str) -> str:
+    return value.replace("\\n", "\n") if value else value
+
+
+def _get_gsheets_client():
+    global _gsheets_client
+
+    if _gsheets_client is not None:
+        return _gsheets_client
+
+    config = _get_gsheets_config()
+    if not config:
+        return None
+    if gspread is None:
+        raise RuntimeError("Google Sheets backend configured, but gspread is not installed.")
+
+    credentials = {
+        k: v for k, v in config.items()
+        if k not in {
+            "spreadsheet", "worksheet_store_stock", "worksheet_warehouse",
+            "worksheet_stores", "enabled",
+        }
+    }
+    credentials["private_key"] = _normalize_private_key(credentials.get("private_key", ""))
+
+    _gsheets_client = gspread.service_account_from_dict(credentials)
+    return _gsheets_client
+
+
+def _get_gsheets_workbook():
+    global _gsheets_workbook
+
+    if _gsheets_workbook is not None:
+        return _gsheets_workbook
+
+    config = _get_gsheets_config()
+    if not config:
+        return None
+
+    client = _get_gsheets_client()
+    spreadsheet = config["spreadsheet"]
+    if spreadsheet.startswith("https://"):
+        _gsheets_workbook = client.open_by_url(spreadsheet)
+    else:
+        _gsheets_workbook = client.open_by_key(spreadsheet)
+    return _gsheets_workbook
+
+
+def _worksheet_title(kind: str) -> str:
+    config = _get_gsheets_config()
+    return config.get(f"worksheet_{kind}", {
+        "store_stock": "store_stock_history",
+        "warehouse": "warehouse_history",
+        "stores": "stores",
+    }[kind])
+
+
+def _get_worksheet(title: str, fields: list[str], create_if_missing: bool) -> Optional[object]:
+    workbook = _get_gsheets_workbook()
+    if workbook is None:
+        return None
+
+    try:
+        worksheet = workbook.worksheet(title)
+    except WorksheetNotFound:
+        if not create_if_missing:
+            return None
+        worksheet = workbook.add_worksheet(title=title, rows=1000, cols=max(len(fields), 8))
+
+    if fields and not worksheet.row_values(1):
+        worksheet.append_row(fields, value_input_option="RAW")
+
+    return worksheet
+
+
+def _rows_from_sheet(title: str, fields: list[str]) -> list[dict]:
+    cached = _sheet_cache.get(title)
+    now = time.time()
+    if cached and now - cached[0] < 30:
+        return cached[1]
+
+    worksheet = _get_worksheet(title, fields, create_if_missing=False)
+    if worksheet is None:
+        return []
+
+    values = worksheet.get_all_values()
+    if not values:
+        return []
+
+    headers = values[0]
+    rows = []
+    for raw_row in values[1:]:
+        if not any(cell.strip() for cell in raw_row):
+            continue
+        row = {}
+        for idx, header in enumerate(headers):
+            if not header:
+                continue
+            row[header] = raw_row[idx] if idx < len(raw_row) else ""
+        rows.append(row)
+
+    _sheet_cache[title] = (now, rows)
+    return rows
+
+
+def _append_sheet_row(title: str, fields: list[str], row: dict) -> None:
+    worksheet = _get_worksheet(title, fields, create_if_missing=True)
+    if worksheet is None:
+        raise RuntimeError("Google Sheets backend is not available.")
+
+    values = [row.get(field, "") for field in fields]
+    worksheet.append_row(values, value_input_option="RAW")
+    invalidate_cache()
+
+
+def _replace_sheet_rows(title: str, fields: list[str], rows: list[dict]) -> None:
+    worksheet = _get_worksheet(title, fields, create_if_missing=True)
+    if worksheet is None:
+        raise RuntimeError("Google Sheets backend is not available.")
+
+    worksheet.clear()
+    worksheet.append_row(fields, value_input_option="RAW")
+    if rows:
+        worksheet.append_rows(
+            [[row.get(field, "") for field in fields] for row in rows],
+            value_input_option="RAW",
+        )
+    invalidate_cache()
+
+
+def _read_store_stock_rows() -> list[dict]:
+    if using_gsheets_backend():
+        return _rows_from_sheet(_worksheet_title("store_stock"), STORE_STOCK_FIELDS)
+    return _read_csv_cached(STORE_STOCK_CSV)
+
+
+def _read_warehouse_rows() -> list[dict]:
+    if using_gsheets_backend():
+        return _rows_from_sheet(_worksheet_title("warehouse"), WAREHOUSE_FIELDS)
+    return _read_csv_cached(WAREHOUSE_CSV)
+
+
+def _read_store_rows() -> list[dict]:
+    if using_gsheets_backend():
+        return _rows_from_sheet(_worksheet_title("stores"), STORES_FIELDS)
+    return _read_csv_cached(STORES_CSV)
+
+
+def _csv_text_from_rows(fields: list[str], rows: list[dict]) -> str:
+    output = io.StringIO()
+    writer = csv.DictWriter(output, fieldnames=fields)
+    writer.writeheader()
+    for row in rows:
+        writer.writerow({field: row.get(field, "") for field in fields})
+    return output.getvalue()
+
+
+def read_csv_export(path: str) -> Optional[str]:
+    """Return CSV text for downloads, from local files or Google Sheets."""
+    if not using_gsheets_backend():
+        if os.path.exists(path):
+            with open(path, "r") as f:
+                return f.read()
+        return None
+
+    fields = _EXPORT_FIELDS_BY_PATH.get(path)
+    if fields is None:
+        return None
+    if path == STORE_STOCK_CSV:
+        rows = _read_store_stock_rows()
+    elif path == WAREHOUSE_CSV:
+        rows = _read_warehouse_rows()
+    else:
+        rows = _read_store_rows()
+    return _csv_text_from_rows(fields, rows)
+
+
 def invalidate_cache():
-    """Clear the in-memory CSV cache (call after writes)."""
+    """Clear in-memory caches (call after writes)."""
     _csv_cache.clear()
+    _sheet_cache.clear()
 
 
 # --- Directory & init -----------------------------------------
 
 def ensure_data_dir():
+    if using_gsheets_backend():
+        return
     os.makedirs(DATA_DIR, exist_ok=True)
 
 
 def _init_csv(path, fields):
     """Create CSV with header if it doesn't exist."""
+    if using_gsheets_backend():
+        return
     if not os.path.exists(path):
         ensure_data_dir()
         with open(path, "w", newline="") as f:
@@ -105,22 +369,30 @@ def load_stores():
 
 
 def save_stores_csv(stores):
-    """Save stores list to CSV."""
+    """Save the normalized store list to CSV or Google Sheets."""
+    rows = []
+    for s in stores:
+        rows.append({
+            "id": s.get("id", ""),
+            "name": s.get("name", ""),
+            "address": s.get("address", ""),
+            "lat": s.get("lat", ""),
+            "lng": s.get("lng", ""),
+            "postal_code": s.get("postalCode", ""),
+            "store_type": s.get("storeType", ""),
+            "zone_id": s.get("zoneId", ""),
+        })
+
+    if using_gsheets_backend():
+        _replace_sheet_rows(_worksheet_title("stores"), STORES_FIELDS, rows)
+        return
+
     ensure_data_dir()
     with open(STORES_CSV, "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=STORES_FIELDS)
         writer.writeheader()
-        for s in stores:
-            writer.writerow({
-                "id": s.get("id", ""),
-                "name": s.get("name", ""),
-                "address": s.get("address", ""),
-                "lat": s.get("lat", ""),
-                "lng": s.get("lng", ""),
-                "postal_code": s.get("postalCode", ""),
-                "store_type": s.get("storeType", ""),
-                "zone_id": s.get("zoneId", ""),
-            })
+        for row in rows:
+            writer.writerow(row)
     invalidate_cache()
 
 
@@ -128,26 +400,32 @@ def save_stores_csv(stores):
 
 def append_warehouse_snapshot(data):
     """Append a warehouse stock snapshot."""
-    _init_csv(WAREHOUSE_CSV, WAREHOUSE_FIELDS)
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    row = {
+        "timestamp": now,
+        "in_store_stock": data.get("in_store_stock", 0),
+        "online_stock": data.get("online_stock", 0),
+        "sap_stock": data.get("sap_stock", 0),
+        "price": data.get("price", 0),
+        "mrp": data.get("mrp", 0),
+        "discount": data.get("discount", 0),
+        "product_name": data.get("product_name", ""),
+    }
+
+    if using_gsheets_backend():
+        _append_sheet_row(_worksheet_title("warehouse"), WAREHOUSE_FIELDS, row)
+        return
+
+    _init_csv(WAREHOUSE_CSV, WAREHOUSE_FIELDS)
     with open(WAREHOUSE_CSV, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=WAREHOUSE_FIELDS)
-        writer.writerow({
-            "timestamp": now,
-            "in_store_stock": data.get("in_store_stock", 0),
-            "online_stock": data.get("online_stock", 0),
-            "sap_stock": data.get("sap_stock", 0),
-            "price": data.get("price", 0),
-            "mrp": data.get("mrp", 0),
-            "discount": data.get("discount", 0),
-            "product_name": data.get("product_name", ""),
-        })
+        writer.writerow(row)
     invalidate_cache()
 
 
 def read_warehouse_history():
-    """Read all warehouse history from CSV (cached by mtime)."""
-    rows = _read_csv_cached(WAREHOUSE_CSV)
+    """Read all warehouse history from the active backend."""
+    rows = _read_warehouse_rows()
     parsed = []
     for r in rows:
         row = dict(r)
@@ -172,24 +450,30 @@ def get_latest_warehouse():
 def append_store_stock(batch_id, store_id, store_name, store_type, address, lat, lng,
                        in_store_stock, sap_stock, price, mrp):
     """Append a per-store stock snapshot with batch_id for grouping."""
-    _init_csv(STORE_STOCK_CSV, STORE_STOCK_FIELDS)
     now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    row = {
+        "batch_id": batch_id,
+        "timestamp": now,
+        "store_id": store_id,
+        "store_name": store_name,
+        "store_type": store_type,
+        "address": address,
+        "lat": lat,
+        "lng": lng,
+        "in_store_stock": in_store_stock,
+        "sap_stock": sap_stock,
+        "price": price,
+        "mrp": mrp,
+    }
+
+    if using_gsheets_backend():
+        _append_sheet_row(_worksheet_title("store_stock"), STORE_STOCK_FIELDS, row)
+        return
+
+    _init_csv(STORE_STOCK_CSV, STORE_STOCK_FIELDS)
     with open(STORE_STOCK_CSV, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=STORE_STOCK_FIELDS)
-        writer.writerow({
-            "batch_id": batch_id,
-            "timestamp": now,
-            "store_id": store_id,
-            "store_name": store_name,
-            "store_type": store_type,
-            "address": address,
-            "lat": lat,
-            "lng": lng,
-            "in_store_stock": in_store_stock,
-            "sap_stock": sap_stock,
-            "price": price,
-            "mrp": mrp,
-        })
+        writer.writerow(row)
     invalidate_cache()
 
 
@@ -209,22 +493,20 @@ def _parse_store_stock_rows(rows: list[dict]) -> list[dict]:
 
 
 def read_store_stock_history():
-    """Read all store stock history from CSV (cached by mtime)."""
-    rows = _read_csv_cached(STORE_STOCK_CSV)
-    return _parse_store_stock_rows(rows)
+    """Read all store stock history from the active backend."""
+    return _parse_store_stock_rows(_read_store_stock_rows())
 
 
 def get_latest_store_stock():
     """
     Get the most recent stock snapshot for each store.
-    Optimized: scans from the end of the file to find the latest batch,
+    Optimized: scans from the end of the active dataset to find the latest batch,
     then only parses rows from that batch.
     """
-    rows = _read_csv_cached(STORE_STOCK_CSV)
+    rows = _read_store_stock_rows()
     if not rows:
         return {}
 
-    # Find the latest batch_id by scanning from the end
     latest_batch = None
     for r in reversed(rows):
         bid = r.get("batch_id", "")
@@ -235,7 +517,6 @@ def get_latest_store_stock():
     if not latest_batch:
         return {}
 
-    # Only parse rows from the latest batch
     latest = {}
     for r in rows:
         if r.get("batch_id") == latest_batch:
@@ -256,7 +537,7 @@ def get_batch_ids():
     Get all unique batch IDs sorted by time (newest first).
     Optimized: only reads the batch_id column.
     """
-    rows = _read_csv_cached(STORE_STOCK_CSV)
+    rows = _read_store_stock_rows()
     batches = sorted(
         set(r.get("batch_id", "") for r in rows if r.get("batch_id")),
         reverse=True,
@@ -266,8 +547,7 @@ def get_batch_ids():
 
 def get_batch_data(batch_id):
     """Get all store stock data for a specific batch."""
-    rows = _read_csv_cached(STORE_STOCK_CSV)
-    batch_rows = [r for r in rows if r.get("batch_id") == batch_id]
+    batch_rows = [r for r in _read_store_stock_rows() if r.get("batch_id") == batch_id]
     return _parse_store_stock_rows(batch_rows)
 
 
