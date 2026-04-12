@@ -372,6 +372,19 @@ def _append_sheet_row(title: str, fields: list[str], row: dict) -> None:
     invalidate_cache()
 
 
+def _append_sheet_rows_batch(title: str, fields: list[str], rows: list[dict]) -> None:
+    """Append multiple rows in a single API call to avoid quota limits."""
+    if not rows:
+        return
+    worksheet = _ensure_sheet_schema(title, fields)
+    if worksheet is None:
+        raise RuntimeError("Google Sheets backend is not available.")
+
+    values = [[row.get(field, "") for field in fields] for row in rows]
+    worksheet.append_rows(values, value_input_option="RAW")
+    invalidate_cache()
+
+
 def _replace_sheet_rows(title: str, fields: list[str], rows: list[dict]) -> None:
     worksheet = _ensure_sheet_schema(title, fields)
     if worksheet is None:
@@ -591,6 +604,46 @@ def append_store_stock(batch_id, store_id, store_name, store_type, address, lat,
     with open(STORE_STOCK_CSV, "a", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=STORE_STOCK_FIELDS)
         writer.writerow(row)
+    invalidate_cache()
+
+
+def append_store_stock_batch(rows_data: list[dict]):
+    """Append many store stock rows in a single API call (avoids quota limits).
+
+    Each item in rows_data should have the same keys as append_store_stock kwargs:
+    batch_id, store_id, store_name, store_type, address, lat, lng,
+    in_store_stock, sap_stock, price, mrp, product_sku.
+    """
+    if not rows_data:
+        return
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    rows = []
+    for d in rows_data:
+        rows.append({
+            "batch_id": d["batch_id"],
+            "timestamp": now,
+            "store_id": d["store_id"],
+            "store_name": d.get("store_name", ""),
+            "store_type": d.get("store_type", ""),
+            "address": d.get("address", ""),
+            "lat": d.get("lat", 0),
+            "lng": d.get("lng", 0),
+            "in_store_stock": d.get("in_store_stock", -1),
+            "sap_stock": d.get("sap_stock", -1),
+            "price": d.get("price", 0),
+            "mrp": d.get("mrp", 0),
+            "product_sku": d.get("product_sku", ""),
+        })
+
+    if using_gsheets_backend():
+        _append_sheet_rows_batch(_worksheet_title("store_stock"), STORE_STOCK_FIELDS, rows)
+        return
+
+    _init_csv(STORE_STOCK_CSV, STORE_STOCK_FIELDS)
+    with open(STORE_STOCK_CSV, "a", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=STORE_STOCK_FIELDS)
+        for row in rows:
+            writer.writerow(row)
     invalidate_cache()
 
 

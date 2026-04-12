@@ -22,7 +22,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from fairprice_api import PRODUCT_SKU, get_warehouse_stock, get_store_stock
 from data_store import (
     load_stores, save_stores_csv, append_warehouse_snapshot,
-    append_store_stock, ensure_data_dir, generate_batch_id,
+    append_store_stock, append_store_stock_batch, ensure_data_dir, generate_batch_id,
     get_latest_store_stock, get_batch_ids, using_gsheets_backend, STORES_CSV,
 )
 
@@ -133,6 +133,7 @@ def run_stock_check(verbose=True):
     in_stock = 0
     out_of_stock = 0
     not_found = 0
+    all_rows = []  # Collect rows, write once at the end
 
     for store in stores_to_check:
         store_id = store["id"]
@@ -141,39 +142,39 @@ def run_stock_check(verbose=True):
         result = get_store_stock(str(store_id))
 
         if result and result["in_store_stock"] >= 0:
-            append_store_stock(
-                batch_id=batch_id,
-                store_id=store_id,
-                store_name=store_name,
-                store_type=store.get("storeType", ""),
-                address=store.get("address", ""),
-                lat=store.get("lat", 0),
-                lng=store.get("lng", 0),
-                in_store_stock=result["in_store_stock"],
-                sap_stock=result["sap_stock"],
-                price=result["price"],
-                mrp=result["mrp"],
-                product_sku=PRODUCT_SKU,
-            )
+            all_rows.append({
+                "batch_id": batch_id,
+                "store_id": store_id,
+                "store_name": store_name,
+                "store_type": store.get("storeType", ""),
+                "address": store.get("address", ""),
+                "lat": store.get("lat", 0),
+                "lng": store.get("lng", 0),
+                "in_store_stock": result["in_store_stock"],
+                "sap_stock": result["sap_stock"],
+                "price": result["price"],
+                "mrp": result["mrp"],
+                "product_sku": PRODUCT_SKU,
+            })
             if result["in_store_stock"] > 0:
                 in_stock += 1
             else:
                 out_of_stock += 1
         else:
-            append_store_stock(
-                batch_id=batch_id,
-                store_id=store_id,
-                store_name=store_name,
-                store_type=store.get("storeType", ""),
-                address=store.get("address", ""),
-                lat=store.get("lat", 0),
-                lng=store.get("lng", 0),
-                in_store_stock=-1,
-                sap_stock=-1,
-                price=0,
-                mrp=0,
-                product_sku=PRODUCT_SKU,
-            )
+            all_rows.append({
+                "batch_id": batch_id,
+                "store_id": store_id,
+                "store_name": store_name,
+                "store_type": store.get("storeType", ""),
+                "address": store.get("address", ""),
+                "lat": store.get("lat", 0),
+                "lng": store.get("lng", 0),
+                "in_store_stock": -1,
+                "sap_stock": -1,
+                "price": 0,
+                "mrp": 0,
+                "product_sku": PRODUCT_SKU,
+            })
             not_found += 1
 
         checked += 1
@@ -187,20 +188,23 @@ def run_stock_check(verbose=True):
     for store in stores_to_skip:
         sid = str(store["id"])
         prev = latest_stock.get(sid, {})
-        append_store_stock(
-            batch_id=batch_id,
-            store_id=store["id"],
-            store_name=store.get("name", f"Store {sid}"),
-            store_type=store.get("storeType", ""),
-            address=store.get("address", ""),
-            lat=store.get("lat", 0),
-            lng=store.get("lng", 0),
-            in_store_stock=prev.get("in_store_stock", -1),
-            sap_stock=prev.get("sap_stock", -1),
-            price=prev.get("price", 0),
-            mrp=prev.get("mrp", 0),
-            product_sku=PRODUCT_SKU,
-        )
+        all_rows.append({
+            "batch_id": batch_id,
+            "store_id": store["id"],
+            "store_name": store.get("name", f"Store {sid}"),
+            "store_type": store.get("storeType", ""),
+            "address": store.get("address", ""),
+            "lat": store.get("lat", 0),
+            "lng": store.get("lng", 0),
+            "in_store_stock": prev.get("in_store_stock", -1),
+            "sap_stock": prev.get("sap_stock", -1),
+            "price": prev.get("price", 0),
+            "mrp": prev.get("mrp", 0),
+            "product_sku": PRODUCT_SKU,
+        })
+
+    # Write all rows in a single API call instead of one per store
+    append_store_stock_batch(all_rows)
 
     msg = (f"Batch {batch_id}: Checked {checked}/{len(valid_stores)} stores "
            f"(skipped {len(stores_to_skip)}) - "
