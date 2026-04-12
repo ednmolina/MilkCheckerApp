@@ -10,6 +10,7 @@ __pycache__/
 .cursor*
 CLAUDE.md
 CLAUDE.*
+.streamlit/secrets.toml
 Meiji Milk Tracker.app/
 Meiji Milk Tracker.zip
 prompt.docx
