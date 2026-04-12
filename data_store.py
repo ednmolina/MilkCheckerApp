@@ -13,7 +13,12 @@ import math
 import os
 import time
 from datetime import datetime, timezone
-from typing import Optional
+from zoneinfo import ZoneInfo
+
+_UTC = timezone.utc
+_EASTERN = ZoneInfo("America/New_York")
+_SINGAPORE = ZoneInfo("Asia/Singapore")
+from typing import Optional, Union
 
 try:
     import tomllib
@@ -70,6 +75,71 @@ _gsheets_client = None
 _gsheets_workbook = None
 _worksheet_initialized: set[str] = set()  # tracks worksheets whose headers have been verified
 _worksheet_cache: dict[str, object] = {}  # caches worksheet objects to avoid fetch_sheet_metadata on every call
+
+
+def current_timestamp_utc_iso() -> str:
+    """Return a canonical UTC timestamp string for persisted rows."""
+    return datetime.now(_UTC).isoformat(timespec="seconds").replace("+00:00", "Z")
+
+
+def _tz_label(dt: datetime, tzinfo: ZoneInfo) -> str:
+    """Return a stable display label for known timezones."""
+    if tzinfo.key == "Asia/Singapore":
+        return "SGT"
+    return dt.strftime("%Z")
+
+
+def parse_stored_timestamp(value: object) -> Optional[datetime]:
+    """
+    Parse persisted timestamps from either:
+    - canonical UTC ISO strings, e.g. 2026-04-12T13:15:00Z
+    - legacy naive Eastern strings, e.g. 2026-04-12 09:15:00
+    """
+    if value in (None, "", "Never", "N/A"):
+        return None
+
+    raw = str(value).strip()
+    if not raw:
+        return None
+
+    try:
+        iso_value = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+        parsed = datetime.fromisoformat(iso_value)
+        if parsed.tzinfo is None:
+            return parsed.replace(tzinfo=_EASTERN)
+        return parsed
+    except ValueError:
+        pass
+
+    try:
+        return datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_EASTERN)
+    except ValueError:
+        return None
+
+
+def format_timestamp_for_timezone(value: object, tz: Union[str, ZoneInfo], show_tz: bool = True) -> str:
+    """Render a persisted timestamp in a specific timezone."""
+    parsed = parse_stored_timestamp(value)
+    if parsed is None:
+        return str(value)
+
+    tzinfo = ZoneInfo(tz) if isinstance(tz, str) else tz
+    converted = parsed.astimezone(tzinfo)
+    suffix = f" {_tz_label(converted, tzinfo)}" if show_tz else ""
+    return converted.strftime("%Y-%m-%d %H:%M:%S") + suffix
+
+
+def format_timestamp_dual(value: object) -> str:
+    """Render a persisted timestamp in Singapore and New York time."""
+    parsed = parse_stored_timestamp(value)
+    if parsed is None:
+        return str(value)
+
+    singapore_dt = parsed.astimezone(_SINGAPORE)
+    new_york_dt = parsed.astimezone(_EASTERN)
+    singapore = singapore_dt.strftime("%Y-%m-%d %H:%M:%S") + f" {_tz_label(singapore_dt, _SINGAPORE)}"
+    new_york = new_york_dt.strftime("%Y-%m-%d %H:%M:%S") + f" {_tz_label(new_york_dt, _EASTERN)}"
+    return f"{singapore} / {new_york}"
 
 
 def _read_csv_cached(path: str) -> list[dict]:
@@ -482,7 +552,7 @@ def _init_csv(path, fields):
 
 def generate_batch_id():
     """Generate a batch ID for grouping stores checked in the same run."""
-    return datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    return datetime.now(_EASTERN).strftime("%Y%m%d_%H%M%S")
 
 
 # --- Stores ---------------------------------------------------
@@ -527,7 +597,7 @@ def save_stores_csv(stores):
 
 def append_warehouse_snapshot(data):
     """Append a warehouse stock snapshot."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    now = current_timestamp_utc_iso()
     row = {
         "timestamp": now,
         "in_store_stock": data.get("in_store_stock", 0),
@@ -579,7 +649,7 @@ def get_latest_warehouse(product_sku: Optional[str] = None):
 def append_store_stock(batch_id, store_id, store_name, store_type, address, lat, lng,
                        in_store_stock, sap_stock, price, mrp, product_sku=""):
     """Append a per-store stock snapshot with batch_id for grouping."""
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    now = current_timestamp_utc_iso()
     row = {
         "batch_id": batch_id,
         "timestamp": now,
@@ -616,7 +686,7 @@ def append_store_stock_batch(rows_data: list[dict]):
     """
     if not rows_data:
         return
-    now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+    now = current_timestamp_utc_iso()
     rows = []
     for d in rows_data:
         rows.append({
