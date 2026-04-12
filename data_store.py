@@ -93,7 +93,7 @@ def parse_stored_timestamp(value: object) -> Optional[datetime]:
     """
     Parse persisted timestamps from either:
     - canonical UTC ISO strings, e.g. 2026-04-12T13:15:00Z
-    - legacy naive Eastern strings, e.g. 2026-04-12 09:15:00
+    - legacy naive UTC strings, e.g. 2026-04-12 13:15:00
     """
     if value in (None, "", "Never", "N/A"):
         return None
@@ -106,13 +106,13 @@ def parse_stored_timestamp(value: object) -> Optional[datetime]:
         iso_value = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
         parsed = datetime.fromisoformat(iso_value)
         if parsed.tzinfo is None:
-            return parsed.replace(tzinfo=_EASTERN)
+            return parsed.replace(tzinfo=_UTC)
         return parsed
     except ValueError:
         pass
 
     try:
-        return datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_EASTERN)
+        return datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_UTC)
     except ValueError:
         return None
 
