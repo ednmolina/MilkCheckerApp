@@ -12,8 +12,8 @@ import requests
 import time
 from typing import Optional
 
-PRODUCT_SKU = "13282308"
-PRODUCT_SLUG = "meiji-low-fat-high-protein-milk-original-350ml-13282308"
+PRODUCT_SKU = "13282313"
+PRODUCT_SLUG = "meiji-low-fat-high-protein-milk-chocolate-350ml-13282313"
 WAREHOUSE_STORE_ID = "165"
 
 USER_AGENT = (

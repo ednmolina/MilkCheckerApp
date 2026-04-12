@@ -25,7 +25,8 @@ from data_store import (
     load_stores, get_latest_store_stock, get_latest_warehouse,
     read_warehouse_history, read_store_stock_history,
     ensure_data_dir, get_batch_ids, get_batch_data,
-    haversine_km, STORE_STOCK_CSV, WAREHOUSE_CSV, STORES_CSV,
+    haversine_km, read_csv_export,
+    STORE_STOCK_CSV, WAREHOUSE_CSV, STORES_CSV,
 )
 from fairprice_api import search_by_postal_code
 from stock_job import run_stock_check
@@ -38,7 +39,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-PRODUCT_NAME = "Meiji Low Fat High Protein Milk (Original 350ml)"
+PRODUCT_NAME = "Meiji Low Fat High Protein Milk (Chocolate 350ml)"
 SG_CENTER = [1.3521, 103.8198]
 
 # --- Helpers -------------------------------------------------------------
@@ -231,12 +232,9 @@ def cached_postal_search(postal_code: str):
     return search_by_postal_code(postal_code)
 
 @st.cache_data(ttl=60)
-def cached_read_csv_file(path: str):
-    """Cache CSV file reads for download buttons."""
-    if os.path.exists(path):
-        with open(path, "r") as f:
-            return f.read()
-    return None
+def cached_export_csv(path: str):
+    """Cache CSV exports for download buttons."""
+    return read_csv_export(path)
 
 # --- Pre-compute store stock data (used by sidebar + tabs) --------------
 all_stores = cached_load_stores()
@@ -336,7 +334,7 @@ with st.sidebar:
         ("Warehouse History", WAREHOUSE_CSV),
         ("Store List", STORES_CSV),
     ]:
-        content = cached_read_csv_file(path)
+        content = cached_export_csv(path)
         if content:
             st.download_button(
                 label=label,
@@ -347,7 +345,7 @@ with st.sidebar:
             )
 
     st.divider()
-    st.caption("All data stored as CSV - no database")
+    st.caption("Data stored in local CSVs or Google Sheets")
     st.caption("Stock data from FairPrice product/v2 API")
 
 # --- Main content -------------------------------------------------------

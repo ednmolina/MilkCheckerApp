@@ -1,13 +1,13 @@
 # FairPrice Meiji Milk Tracker
 
-A small Streamlit app for tracking `Meiji Low Fat High Protein Milk (Original 350ml)` across FairPrice stores in Singapore.
+A small Streamlit app for tracking `Meiji Low Fat High Protein Milk (Chocolate 350ml)` across FairPrice stores in Singapore.
 
-It collects live stock data from FairPrice endpoints, stores historical snapshots as CSV files, and visualizes current inventory on a map with history and movement analysis.
+It collects live stock data from FairPrice endpoints, stores historical snapshots in local CSV files or Google Sheets, and visualizes current inventory on a map with history and movement analysis.
 
 ## What It Does
 
 - Checks warehouse and per-store stock for the tracked product
-- Stores snapshots locally as CSV files
+- Stores snapshots locally as CSV files or in Google Sheets
 - Shows current store inventory on a map
 - Lets you search stores near a postal code
 - Tracks warehouse stock and price history over time
@@ -19,7 +19,7 @@ It collects live stock data from FairPrice endpoints, stores historical snapshot
 - `app.py` - Streamlit dashboard
 - `stock_job.py` - stock collection job
 - `fairprice_api.py` - FairPrice API integration
-- `data_store.py` - CSV-based persistence helpers
+- `data_store.py` - persistence helpers for local CSV or Google Sheets
 - `launch.command` - double-click launcher for macOS
 - `build_app.sh` - creates a bundled macOS `.app`
 - `stores_with_coords.json` - store metadata with coordinates
@@ -95,15 +95,68 @@ When the bundled app runs, data is stored in:
 ~/Documents/Meiji Milk Tracker Data
 ```
 
-## Data Model
+## Deploying To Streamlit Community Cloud With Google Sheets
 
-This project does not use a database. It persists everything as CSV files.
+This app can run on Streamlit Community Cloud while using Google Sheets as the durable data store.
 
-- `warehouse_history.csv` stores warehouse snapshots
-- `store_stock_history.csv` stores per-store snapshots grouped by `batch_id`
-- `stores.csv` stores normalized store metadata
+### 1. Create one Google spreadsheet with 3 tabs
 
-In normal local development, files are written under `data/`.
+Create these worksheet tabs exactly:
+
+- `store_stock_history`
+- `warehouse_history`
+- `stores`
+
+### 2. Import your current local data into those tabs
+
+Take the files from your local `data/` folder and import them like this:
+
+- `data/store_stock_history.csv` -> worksheet tab `store_stock_history`
+- `data/warehouse_history.csv` -> worksheet tab `warehouse_history`
+- `data/stores.csv` -> worksheet tab `stores`
+
+Each CSV should be imported into its own tab, with the header row preserved.
+
+### 3. Create a Google service account
+
+Follow the Streamlit private Google Sheets tutorial:
+
+https://docs.streamlit.io/develop/tutorials/databases/private-gsheet
+
+After you create the service account JSON key:
+
+- share the spreadsheet with the service account's `client_email`
+- give it `Editor` access
+
+### 4. Add secrets for local dev or Streamlit Cloud
+
+Use `.streamlit/secrets.example.toml` in this repo as your template.
+
+For local development:
+
+- copy it to `.streamlit/secrets.toml`
+- fill in the real spreadsheet URL and service account fields
+
+For Streamlit Community Cloud:
+
+- open your app settings
+- go to `Secrets`
+- paste the same TOML content there
+
+The app will automatically switch from local CSV storage to Google Sheets when those secrets are present.
+
+### 5. Deploy on Streamlit Community Cloud
+
+- Push the repo to GitHub
+- In Streamlit Community Cloud, create a new app from this repo
+- Set the main file path to `app.py`
+- Add the Google Sheets secrets
+- Deploy
+
+### Important behavior
+
+- The app and `Run Stock Check Now` button will write new snapshots into Google Sheets when the secrets are configured.
+- Without Google Sheets secrets, the app falls back to local CSV files.
 
 ## Notes
 
