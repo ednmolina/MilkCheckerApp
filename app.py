@@ -283,6 +283,28 @@ out_stock_count = len([s for s in stores_with_stock if s["stock"] == 0])
 low_stock_count = len([s for s in stores_with_stock if 0 < s["stock"] <= 10])
 not_avail_count = len([s for s in stores_with_stock if s["stock"] < 0])
 
+# --- Timezone setup (must be before sidebar so fmt_ts is available) -----
+_TZ_OPTIONS = {"🇸🇬 Singapore": "Asia/Singapore", "🇺🇸 New York": "America/New_York"}
+_STORED_TZ = ZoneInfo("America/New_York")  # timestamps are stored in Eastern time
+
+# Read from session state (set by the radio widget below); default to Singapore
+_tz_label = st.session_state.get("display_tz", "🇸🇬 Singapore")
+_display_tz = ZoneInfo(_TZ_OPTIONS.get(_tz_label, "Asia/Singapore"))
+
+
+def fmt_ts(ts_str: str, show_tz: bool = True) -> str:
+    """Convert a stored Eastern timestamp string to the selected display timezone."""
+    if not ts_str or ts_str in ("Never", "N/A", ""):
+        return str(ts_str)
+    try:
+        dt = datetime.strptime(str(ts_str)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_STORED_TZ)
+        converted = dt.astimezone(_display_tz)
+        suffix = f" {converted.strftime('%Z')}" if show_tz else ""
+        return converted.strftime("%Y-%m-%d %H:%M:%S") + suffix
+    except Exception:
+        return str(ts_str)
+
+
 # --- Sidebar ------------------------------------------------------------
 with st.sidebar:
     st.title("🥛 Meiji Milk Tracker")
@@ -379,38 +401,15 @@ with st.sidebar:
     st.caption("Stock data from FairPrice product/v2 API")
 
 # --- Timezone toggle (top of page, mobile-friendly) ---------------------
-_TZ_OPTIONS = {"🇸🇬 Singapore": "Asia/Singapore", "🇺🇸 New York": "America/New_York"}
-_STORED_TZ = ZoneInfo("America/New_York")  # timestamps are stored in Eastern time
-
 tz_col, _ = st.columns([2, 5])
 with tz_col:
-    _tz_label = st.radio(
+    st.radio(
         "Display timezone",
         list(_TZ_OPTIONS.keys()),
         horizontal=True,
         label_visibility="collapsed",
         key="display_tz",
     )
-_display_tz = ZoneInfo(_TZ_OPTIONS[_tz_label])
-
-
-def fmt_ts(ts_str: str, show_tz: bool = True) -> str:
-    """Convert a stored Eastern timestamp string to the selected display timezone."""
-    if not ts_str or ts_str in ("Never", "N/A", ""):
-        return str(ts_str)
-    try:
-        dt = datetime.strptime(str(ts_str)[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_STORED_TZ)
-        converted = dt.astimezone(_display_tz)
-        suffix = f" {converted.strftime('%Z')}" if show_tz else ""
-        return converted.strftime("%Y-%m-%d %H:%M:%S") + suffix
-    except Exception:
-        return str(ts_str)
-
-
-def fmt_ts_df(series: pd.Series) -> pd.Series:
-    """Convert a pandas Series of timestamp strings to the display timezone."""
-    return series.apply(lambda x: fmt_ts(x, show_tz=False))
-
 
 # --- Main content -------------------------------------------------------
 tab_map, tab_history, tab_inventory = st.tabs([
