@@ -68,6 +68,7 @@ _sheet_cache: dict[str, tuple[float, list[dict]]] = {}
 _gsheets_config_cache: Optional[dict] = None
 _gsheets_client = None
 _gsheets_workbook = None
+_worksheet_initialized: set[str] = set()  # tracks worksheets whose headers have been verified
 
 
 def _read_csv_cached(path: str) -> list[dict]:
@@ -284,8 +285,10 @@ def _get_worksheet(title: str, fields: list[str], create_if_missing: bool) -> Op
             return None
         worksheet = workbook.add_worksheet(title=title, rows=1000, cols=max(len(fields), 8))
 
-    if fields and not worksheet.row_values(1):
-        worksheet.append_row(fields, value_input_option="RAW")
+    if fields and title not in _worksheet_initialized:
+        if not worksheet.row_values(1):
+            worksheet.append_row(fields, value_input_option="RAW")
+        _worksheet_initialized.add(title)
 
     return worksheet
 
@@ -295,8 +298,13 @@ def _ensure_sheet_schema(title: str, fields: list[str]) -> Optional[object]:
     if worksheet is None:
         return None
 
+    # Skip the schema check if we already verified this worksheet's headers
+    if title in _worksheet_initialized:
+        return worksheet
+
     existing_fields = worksheet.row_values(1)
     if existing_fields == fields:
+        _worksheet_initialized.add(title)
         return worksheet
 
     values = worksheet.get_all_values()
@@ -324,7 +332,7 @@ def _ensure_sheet_schema(title: str, fields: list[str]) -> Optional[object]:
 def _rows_from_sheet(title: str, fields: list[str]) -> list[dict]:
     cached = _sheet_cache.get(title)
     now = time.time()
-    if cached and now - cached[0] < 30:
+    if cached and now - cached[0] < 120:
         return cached[1]
 
     worksheet = _get_worksheet(title, fields, create_if_missing=False)
@@ -433,6 +441,7 @@ def invalidate_cache():
     """Clear in-memory caches (call after writes)."""
     _csv_cache.clear()
     _sheet_cache.clear()
+    _worksheet_initialized.clear()
 
 
 # --- Directory & init -----------------------------------------
