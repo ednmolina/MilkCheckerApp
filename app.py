@@ -459,15 +459,27 @@ with st.sidebar:
     # Stock check controls
     st.subheader("🔄 Stock Check")
     if st.button("Run Stock Check Now", use_container_width=True, type="primary"):
-        with st.spinner("Checking both products... (this takes ~60-120s)"):
-            result = run_stock_check(verbose=False)
+        progress_bar = st.progress(0, text="Starting stock check...")
+        progress_status = st.empty()
+
+        def _update_stock_check_progress(payload: dict) -> None:
+            fraction = float(payload.get("fraction", 0.0) or 0.0)
+            text = str(payload.get("text", "Running stock check..."))
+            progress_bar.progress(min(max(fraction, 0.0), 1.0), text=text)
+            progress_status.caption(text)
+
+        result = run_stock_check(verbose=False, progress_callback=_update_stock_check_progress)
         
         if result.get("success"):
+            progress_bar.progress(1.0, text="Stock check complete.")
+            progress_status.caption("Stock check complete. Refreshing dashboard...")
             st.success(result["message"])
             st.cache_data.clear()
             time.sleep(1)
             st.rerun()
         else:
+            progress_bar.empty()
+            progress_status.empty()
             st.error(result.get("message", "Failed"))
 
     # Show batch info (cached)

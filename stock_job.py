@@ -15,6 +15,7 @@ API calls per run:
 import sys
 import os
 import time
+from typing import Callable, Optional
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -24,6 +25,13 @@ from data_store import (
     append_store_stock_batch, ensure_data_dir, generate_batch_id,
     get_latest_store_stock, get_batch_ids, using_gsheets_backend, STORES_CSV,
 )
+
+
+def _emit_progress(progress_callback: Optional[Callable[[dict], None]], **payload) -> None:
+    """Send progress events to the caller when a callback is provided."""
+    if progress_callback is None:
+        return
+    progress_callback(payload)
 
 def _should_check_store(store_id: str, latest_stock: dict, run_count: int) -> bool:
     """
@@ -68,7 +76,7 @@ def _stores_csv_needs_update() -> bool:
         return False
     return os.path.getmtime(stores_json) > os.path.getmtime(STORES_CSV)
 
-def run_stock_check(verbose=True):
+def run_stock_check(verbose=True, progress_callback: Optional[Callable[[dict], None]] = None):
     """
     Run a stock check cycle with smart delta checking.
     - Full run every 6th execution (checks all stores)
@@ -81,47 +89,30 @@ def run_stock_check(verbose=True):
         print(f"Batch ID: {batch_id}")
 
     # Load all stores
+    _emit_progress(
+        progress_callback,
+        stage="preparing",
+        fraction=0.0,
+        text="Loading store list...",
+    )
     stores = load_stores()
     if not stores:
         if verbose:
             print("No stores found in stores_with_coords.json")
         return {"success": False, "message": "No stores found"}
 
-    # Only rewrite stores.csv if needed
-    if _stores_csv_needs_update():
-        save_stores_csv(stores)
-        if verbose:
-            print("Updated stores.csv")
-
     valid_stores = [s for s in stores if s.get("lat") and s.get("lng")]
     all_rows = []
     product_messages = []
+    stores_csv_needs_update = _stores_csv_needs_update()
 
     total_products = len(PRODUCTS)
-    for p_idx, (product_key, product) in enumerate(PRODUCTS.items()):
+    product_plans = []
+    for product_key, product in PRODUCTS.items():
         product_name = product["name"]
         product_sku = product["sku"]
         run_count = _get_run_count(product_sku=product_sku)
         is_full_run = (run_count % 6 == 0)
-
-        if verbose:
-            run_type = "FULL" if is_full_run else "SMART"
-            print(f"\n[{product_key}] {product_name}")
-            print(f"Run #{run_count} ({run_type} check)")
-            print("Checking warehouse stock...")
-
-        warehouse = get_warehouse_stock(product_sku=product_sku)
-        if warehouse:
-            append_warehouse_snapshot(warehouse)
-            if verbose:
-                print(
-                    f"  Warehouse: {warehouse['in_store_stock']} units, "
-                    f"${warehouse['price']} (MRP ${warehouse['mrp']})"
-                )
-        else:
-            if verbose:
-                print("  WARNING: Could not fetch warehouse stock")
-
         latest_stock = get_latest_store_stock(product_sku=product_sku)
 
         stores_to_check = []
@@ -133,11 +124,116 @@ def run_stock_check(verbose=True):
             else:
                 stores_to_skip.append(store)
 
+        product_plans.append({
+            "product_key": product_key,
+            "product_name": product_name,
+            "product_sku": product_sku,
+            "run_count": run_count,
+            "is_full_run": is_full_run,
+            "latest_stock": latest_stock,
+            "stores_to_check": stores_to_check,
+            "stores_to_skip": stores_to_skip,
+        })
+
+    total_store_checks = sum(len(plan["stores_to_check"]) for plan in product_plans)
+    total_work_units = 1 + total_products + total_store_checks + 1
+    if stores_csv_needs_update:
+        total_work_units += 1
+    completed_work_units = 1
+
+    _emit_progress(
+        progress_callback,
+        stage="preparing",
+        fraction=completed_work_units / total_work_units,
+        text=(
+            f"Prepared stock check plan for {total_products} products "
+            f"across {total_store_checks} store requests."
+        ),
+        total_products=total_products,
+        total_store_checks=total_store_checks,
+    )
+
+    # Only rewrite stores.csv if needed
+    if stores_csv_needs_update:
+        _emit_progress(
+            progress_callback,
+            stage="syncing_store_list",
+            fraction=completed_work_units / total_work_units,
+            text="Syncing store list to the active backend...",
+        )
+        save_stores_csv(stores)
+        completed_work_units += 1
+        if verbose:
+            print("Updated stores.csv")
+        _emit_progress(
+            progress_callback,
+            stage="syncing_store_list",
+            fraction=completed_work_units / total_work_units,
+            text="Store list synced. Starting stock checks...",
+        )
+
+    for p_idx, plan in enumerate(product_plans):
+        product_key = plan["product_key"]
+        product_name = plan["product_name"]
+        product_sku = plan["product_sku"]
+        run_count = plan["run_count"]
+        is_full_run = plan["is_full_run"]
+        latest_stock = plan["latest_stock"]
+        stores_to_check = plan["stores_to_check"]
+        stores_to_skip = plan["stores_to_skip"]
+
+        if verbose:
+            run_type = "FULL" if is_full_run else "SMART"
+            print(f"\n[{product_key}] {product_name}")
+            print(f"Run #{run_count} ({run_type} check)")
+            print("Checking warehouse stock...")
+
+        _emit_progress(
+            progress_callback,
+            stage="warehouse",
+            fraction=completed_work_units / total_work_units,
+            text=f"[{p_idx + 1}/{total_products}] Checking warehouse for {product_name}...",
+            product_key=product_key,
+            product_name=product_name,
+            product_index=p_idx + 1,
+            total_products=total_products,
+        )
+        warehouse = get_warehouse_stock(product_sku=product_sku)
+        if warehouse:
+            append_warehouse_snapshot(warehouse)
+            if verbose:
+                print(
+                    f"  Warehouse: {warehouse['in_store_stock']} units, "
+                    f"${warehouse['price']} (MRP ${warehouse['mrp']})"
+                )
+        else:
+            if verbose:
+                print("  WARNING: Could not fetch warehouse stock")
+        completed_work_units += 1
+
         if verbose:
             print(
                 f"Checking {len(stores_to_check)} stores "
                 f"(skipping {len(stores_to_skip)} unchanged stores)..."
             )
+
+        _emit_progress(
+            progress_callback,
+            stage="stores",
+            fraction=completed_work_units / total_work_units,
+            text=(
+                f"[{p_idx + 1}/{total_products}] {product_name}: "
+                f"checking 0/{len(stores_to_check)} stores "
+                f"(skipping {len(stores_to_skip)} unchanged)."
+            ),
+            product_key=product_key,
+            product_name=product_name,
+            product_index=p_idx + 1,
+            total_products=total_products,
+            checked=0,
+            total=len(stores_to_check),
+            skipped=len(stores_to_skip),
+        )
 
         checked = 0
         in_stock = 0
@@ -187,8 +283,28 @@ def run_stock_check(verbose=True):
                 not_found += 1
 
             checked += 1
+            completed_work_units += 1
             if verbose and checked % 20 == 0:
                 print(f"  Checked {checked}/{len(stores_to_check)} stores...")
+            _emit_progress(
+                progress_callback,
+                stage="stores",
+                fraction=completed_work_units / total_work_units,
+                text=(
+                    f"[{p_idx + 1}/{total_products}] {product_name}: "
+                    f"checked {checked}/{len(stores_to_check)} stores "
+                    f"(skipping {len(stores_to_skip)} unchanged)."
+                ),
+                product_key=product_key,
+                product_name=product_name,
+                product_index=p_idx + 1,
+                total_products=total_products,
+                checked=checked,
+                total=len(stores_to_check),
+                skipped=len(stores_to_skip),
+                current_store_id=store_id,
+                current_store_name=store_name,
+            )
 
             time.sleep(0.15)
 
@@ -216,7 +332,23 @@ def run_stock_check(verbose=True):
             f"{in_stock} in stock, {out_of_stock} out of stock, {not_found} not found"
         )
 
+    _emit_progress(
+        progress_callback,
+        stage="saving",
+        fraction=completed_work_units / total_work_units,
+        text=f"Saving {len(all_rows)} store snapshots to the active backend...",
+        rows=len(all_rows),
+    )
     append_store_stock_batch(all_rows)
+    completed_work_units += 1
+
+    _emit_progress(
+        progress_callback,
+        stage="complete",
+        fraction=completed_work_units / total_work_units,
+        text="Stock check complete.",
+        rows=len(all_rows),
+    )
 
     msg = f"Batch {batch_id}: " + " | ".join(product_messages)
     if verbose:
