@@ -1,5 +1,22 @@
 import requests, json, time
 
+STORE_OVERRIDES = {
+    "48": {
+        "address": "100 Tras St, #B1-01, Singapore 079027",
+        "lat": 1.2746125459939128,
+        "lng": 103.84341266296691,
+        "postalCode": "079027",
+        "storeType": "FairPrice Finest",
+    },
+    "166": {
+        "address": "107 N Bridge Rd, #B1-10 Funan, Singapore 179105",
+        "lat": 1.2912474318213683,
+        "lng": 103.85019784209501,
+        "postalCode": "179105",
+        "storeType": "FairPrice Finest",
+    }
+}
+
 # Postal codes spread across all regions of Singapore
 postal_codes = [
     "520101", "530201", "540301", "550401", "560501",
@@ -32,6 +49,7 @@ for pc in postal_codes:
                     "postalCode": s.get("postalCode", ""),
                     "storeType": s.get("storeType", ""),
                 }
+                stores[sid].update(STORE_OVERRIDES.get(sid, {}))
         print(f"Postal {pc}: found {len(stores)} unique stores so far")
     except Exception as e:
         print(f"Error for {pc}: {e}")

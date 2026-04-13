@@ -326,9 +326,9 @@
   {
     "id": "48",
     "name": "100AM",
-    "address": "100 Tras Street #B1-01 100AM, 079027",
-    "lat": 1.27852,
-    "lng": 103.84447,
+    "address": "100 Tras St, #B1-01, Singapore 079027",
+    "lat": 1.2746125459939128,
+    "lng": 103.84341266296691,
     "postalCode": "079027",
     "storeType": "FairPrice Finest"
   },
@@ -1298,10 +1298,10 @@
   {
     "id": "166",
     "name": "Funan Mall",
-    "address": "6 Raffles Quay Singapore 048580",
-    "lat": 1.28181247914636,
-    "lng": 103.85138450513,
-    "postalCode": "048580",
+    "address": "107 N Bridge Rd, #B1-10 Funan, Singapore 179105",
+    "lat": 1.2912474318213683,
+    "lng": 103.85019784209501,
+    "postalCode": "179105",
     "storeType": "FairPrice Finest"
   },
   {
