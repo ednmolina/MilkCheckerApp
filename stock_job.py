@@ -97,7 +97,8 @@ def run_stock_check(verbose=True):
     all_rows = []
     product_messages = []
 
-    for product_key, product in PRODUCTS.items():
+    total_products = len(PRODUCTS)
+    for p_idx, (product_key, product) in enumerate(PRODUCTS.items()):
         product_name = product["name"]
         product_sku = product["sku"]
         run_count = _get_run_count(product_sku=product_sku)
@@ -142,7 +143,7 @@ def run_stock_check(verbose=True):
         in_stock = 0
         out_of_stock = 0
         not_found = 0
-
+        
         for store in stores_to_check:
             store_id = store["id"]
             store_name = store.get("name", f"Store {store_id}")

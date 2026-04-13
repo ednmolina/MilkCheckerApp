@@ -456,6 +456,28 @@ with st.sidebar:
         st.caption(f"Path: {storage_status['data_dir']}")
     st.divider()
 
+    # Stock check controls
+    st.subheader("🔄 Stock Check")
+    if st.button("Run Stock Check Now", use_container_width=True, type="primary"):
+        with st.spinner("Checking both products... (this takes ~60-120s)"):
+            result = run_stock_check(verbose=False)
+        
+        if result.get("success"):
+            st.success(result["message"])
+            st.cache_data.clear()
+            time.sleep(1)
+            st.rerun()
+        else:
+            st.error(result.get("message", "Failed"))
+
+    # Show batch info (cached)
+    batches = cached_batch_ids(selected_product_sku)
+    if batches:
+        st.caption(f"Latest batch: {batches[0]}")
+        st.caption(f"Total batches: {len(batches)}")
+
+    st.divider()
+
     # Warehouse stock summary
     warehouse = cached_get_latest_warehouse(selected_product_sku)
     if warehouse:
@@ -494,34 +516,6 @@ with st.sidebar:
         ["All Stores", "In Stock (> 0)", "Out of Stock (0)", "Low Stock (1-10)", "Not Available"],
         key="map_filter",
     )
-
-    st.divider()
-
-    # Stock check controls
-    st.subheader("🔄 Stock Check")
-    if st.button("Run Stock Check Now", use_container_width=True, type="primary"):
-        progress_bar = st.progress(0, text="Starting stock check...")
-        
-        def update_progress(fraction, message):
-            progress_bar.progress(fraction, text=message)
-            
-        result = run_stock_check(verbose=False, progress_callback=update_progress)
-        
-        progress_bar.empty()
-        
-        if result.get("success"):
-            st.success(result["message"])
-            st.cache_data.clear()
-            time.sleep(1)
-            st.rerun()
-        else:
-            st.error(result.get("message", "Failed"))
-
-    # Show batch info (cached)
-    batches = cached_batch_ids(selected_product_sku)
-    if batches:
-        st.caption(f"Latest batch: {batches[0]}")
-        st.caption(f"Total batches: {len(batches)}")
 
     st.divider()
 
@@ -565,9 +559,7 @@ with tz_col:
 st.markdown("# 🥛 FairPrice Meiji Tracker")
 st.markdown(f"**Tracking:** {selected_product_name}")
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.metric("Total Units Across All Stores", f"{total_units_all_stores:,}")
+st.metric("Total Units Across All Stores", f"{total_units_all_stores:,}")
 
 tab_map, tab_history, tab_inventory = st.tabs([
     "📍 Store Finder", "📊 Stock History", "📈 Total Inventory"
