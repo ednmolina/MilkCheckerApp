@@ -43,51 +43,45 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Add custom colors, fonts, and styling
+# Add premium dark mode styling
 st.markdown("""
     <style>
-        /* Branding colors */
-        :root {
-            --primary-color: #2E7D32;  /* Fresh green for milk */
-            --secondary-color: #FFF3E0; /* Warm cream */
-            --accent-color: #FFB74D;    /* Golden orange */
-        }
-        
-        /* Hero header styling */
+        /* Hero header styling - Refined & Minimal */
         h1 {
-            background: linear-gradient(135deg, #2E7D32 0%, #558B2F 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 10px;
+            color: #F5F5F7;
+            padding: 10px 0;
             text-align: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: 700;
+            background: transparent;
+            box-shadow: none;
         }
         
-        /* Card-like containers */
+        /* Card-like containers - Apple Dark Mode Style */
         [data-testid="metric-container"] {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 8px;
-            border-left: 4px solid #2E7D32;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background-color: #1C1C1E;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #38383A;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
         }
         
         /* Sidebar enhancement */
         [data-testid="stSidebar"] {
-            background-color: #f5f5f5;
+            background-color: #000000;
         }
         
-        /* Button styling */
+        /* Button styling - Sleek & Modern */
         button {
-            border-radius: 6px;
-            font-weight: 600;
+            border-radius: 8px !important;
+            font-weight: 600 !important;
         }
         
-        /* Better dividers */
+        /* Subtle dividers */
         hr {
             border: 0;
-            height: 2px;
-            background: linear-gradient(to right, transparent, #2E7D32, transparent);
+            height: 1px;
+            background: #38383A;
+            margin: 20px 0;
         }
     </style>
 """, unsafe_allow_html=True)
