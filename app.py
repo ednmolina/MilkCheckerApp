@@ -153,6 +153,35 @@ st.markdown("""
             margin: 24px 0;
         }
 
+        /* Compact stat pills for mobile-friendly summaries */
+        .stat-pill-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 0.25rem 0 0.75rem;
+        }
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(44, 44, 46, 0.95);
+            border: 1px solid rgba(118, 118, 128, 0.22);
+            color: #F5F5F7;
+            line-height: 1;
+        }
+        .stat-pill__label {
+            color: #A1A1A6;
+            font-size: 0.82rem;
+            white-space: nowrap;
+        }
+        .stat-pill__value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
         /* Mobile specific adjustments */
         @media (max-width: 768px) {
             [data-testid="stMetricValue"] {
@@ -164,6 +193,16 @@ st.markdown("""
             .stButton > button {
                 padding: 14px 20px !important;
                 font-size: 1.1rem !important; /* Larger touch target for iPhone */
+            }
+            .stat-pill-row {
+                gap: 8px;
+            }
+            .stat-pill {
+                padding: 8px 12px;
+            }
+            .stat-pill__label,
+            .stat-pill__value {
+                font-size: 0.85rem;
             }
         }
     </style>
@@ -215,6 +254,15 @@ def stock_label(stock: int) -> str:
     if stock == 0:
         return "Out of Stock"
     return f"{stock} units"
+
+
+def render_stat_pills(items: list[tuple[str, str]]) -> None:
+    pills = "".join(
+        f'<div class="stat-pill"><span class="stat-pill__label">{label}</span>'
+        f'<span class="stat-pill__value">{value}</span></div>'
+        for label, value in items
+    )
+    st.markdown(f'<div class="stat-pill-row">{pills}</div>', unsafe_allow_html=True)
 
 
 def convert_timestamp_series(values: pd.Series, target_tz: ZoneInfo) -> pd.Series:
@@ -416,6 +464,8 @@ store_movement_df = infer_store_movements(store_history_df)
 store_movement_summary = build_store_movement_summary(store_movement_df)
 inventory_totals_df = build_batch_totals(store_history_df, store_movement_df)
 legacy_product_data_present = bool((all_store_history or all_warehouse_history) and not (store_history or warehouse_history))
+batches = cached_batch_ids(selected_product_sku)
+warehouse = cached_get_latest_warehouse(selected_product_sku)
 
 stores_with_stock = []
 for store in all_stores:
@@ -436,6 +486,17 @@ in_stock_count = len([s for s in stores_with_stock if s["stock"] > 0])
 out_stock_count = len([s for s in stores_with_stock if s["stock"] == 0])
 low_stock_count = len([s for s in stores_with_stock if 0 < s["stock"] <= 10])
 not_avail_count = len([s for s in stores_with_stock if s["stock"] < 0])
+latest_batch_id = batches[0] if batches else None
+warehouse_stock_units = int(warehouse["in_store_stock"]) if warehouse else None
+latest_check_raw = warehouse.get("timestamp") if warehouse else ""
+if not latest_check_raw and latest_stock:
+    latest_check_raw = max(
+        (row.get("timestamp", "") for row in latest_stock.values() if row.get("timestamp")),
+        default="",
+    )
+last_checked_label = (
+    format_timestamp_for_timezone(latest_check_raw, _display_tz) if latest_check_raw else "Never"
+)
 
 # --- Sidebar ------------------------------------------------------------
 with st.sidebar:
@@ -482,42 +543,15 @@ with st.sidebar:
             progress_status.empty()
             st.error(result.get("message", "Failed"))
 
-    # Show batch info (cached)
-    batches = cached_batch_ids(selected_product_sku)
-    if batches:
-        st.caption(f"Latest batch: {batches[0]}")
-        st.caption(f"Total batches: {len(batches)}")
-
-    st.divider()
-
-    # Warehouse stock summary
-    warehouse = cached_get_latest_warehouse(selected_product_sku)
-    if warehouse:
-        st.metric("Warehouse Stock", f"{warehouse['in_store_stock']} units")
-        price = warehouse.get("price", 0)
-        mrp = warehouse.get("mrp", 0)
-        discount = warehouse.get("discount", 0)
-        if price:
-            col1, col2 = st.columns(2)
-            col1.metric("Sale Price", f"${float(price):.2f}")
-            col2.metric("MRP", f"${float(mrp):.2f}")
-            if discount and float(discount) < 0:
-                st.success(f"Save ${abs(float(discount)):.2f}")
-        st.caption(
-            f"Last checked on: "
-            f"{format_timestamp_for_timezone(warehouse.get('timestamp', 'N/A'), _display_tz)}"
-        )
-    else:
-        st.warning("⚠️ No warehouse data yet. Run a stock check first.")
-
     if legacy_product_data_present:
         st.warning(f"⚠️ Only other-product history is available. Run a fresh stock check to populate {selected_product_name} data.")
 
-    st.divider()
-
-    # Total units across all stores
-    st.metric("Total Store Inventory", f"{total_units_all_stores:,} units")
-    st.caption(f"Across {in_stock_count} stores with stock")
+    if latest_batch_id:
+        st.caption(f"Latest batch: {latest_batch_id}")
+        st.caption(f"Last checked: {last_checked_label}")
+        st.caption(f"Stored batches: {len(batches)}")
+    else:
+        st.caption("No stock check has been saved yet.")
 
     st.divider()
 
@@ -570,8 +604,28 @@ with tz_col:
 # --- Main content -------------------------------------------------------
 st.markdown("# 🥛 FairPrice Meiji Tracker")
 st.markdown(f"**Tracking:** {selected_product_name}")
+overview_cols = st.columns(4)
+overview_cols[0].metric("Store Inventory", f"{total_units_all_stores:,}")
+overview_cols[1].metric("Stores With Stock", f"{in_stock_count}/{len(stores_with_stock)}")
+overview_cols[2].metric(
+    "Warehouse Stock",
+    f"{warehouse_stock_units:,}" if warehouse_stock_units is not None else "N/A",
+)
+overview_cols[3].metric("Last Checked", last_checked_label)
 
-st.metric("Total Units Across All Stores", f"{total_units_all_stores:,}")
+if warehouse:
+    price = warehouse.get("price", 0)
+    mrp = warehouse.get("mrp", 0)
+    discount = warehouse.get("discount", 0)
+    price_caption = []
+    if price:
+        price_caption.append(f"Current price ${float(price):.2f}")
+    if mrp:
+        price_caption.append(f"MRP ${float(mrp):.2f}")
+    if discount and float(discount) < 0:
+        price_caption.append(f"Save ${abs(float(discount)):.2f}")
+    if price_caption:
+        st.caption(" · ".join(price_caption))
 
 tab_map, tab_history, tab_inventory = st.tabs([
     "📍 Store Finder", "📊 Stock History", "📈 Total Inventory"
@@ -642,18 +696,14 @@ with tab_map:
         map_center = SG_CENTER
         zoom = 12
 
-    # Summary metrics
-    col1, col2, col3, col4, col5, col6 = st.columns(6)
-    metrics = [
-        (col1, "📦", "Total Stores", len(stores_with_stock)),
-        (col2, "🟢", "In Stock", in_stock_count),
-        (col3, "🟡", "Low Stock", low_stock_count),
-        (col4, "🔴", "Out of Stock", out_stock_count),
-        (col5, "⚪", "Not Available", not_avail_count),
-        (col6, "📊", "Total Units", f"{total_units_all_stores:,}"),
-    ]
-    for col, emoji, label, value in metrics:
-        col.metric(f"{emoji} {label}", value)
+    render_stat_pills([
+        ("Stores", f"{len(stores_with_stock)}"),
+        ("In stock", f"{in_stock_count}"),
+        ("Low", f"{low_stock_count}"),
+        ("Out", f"{out_stock_count}"),
+        ("N/A", f"{not_avail_count}"),
+        ("Units", f"{total_units_all_stores:,}"),
+    ])
 
     st.caption(f"Showing {len(filtered)} stores (filter: {filter_option})")
 
