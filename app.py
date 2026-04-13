@@ -43,45 +43,128 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Add premium dark mode styling
+# Add premium dark mode styling with mobile optimization & elegant typography
 st.markdown("""
     <style>
+        /* Typography & Layout - iPhone 16+ Optimized */
+        body {
+            -webkit-font-smoothing: antialiased;
+        }
+
         /* Hero header styling - Refined & Minimal */
         h1 {
             color: #F5F5F7;
-            padding: 10px 0;
+            padding: 1rem 0;
             text-align: center;
             font-weight: 700;
+            letter-spacing: -0.02em;
             background: transparent;
             box-shadow: none;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
         }
         
-        /* Card-like containers - Apple Dark Mode Style */
+        /* Subheaders */
+        h2, h3 {
+            color: #E8E8ED;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+            margin-top: 1.5rem;
+        }
+        
+        /* Metric Typography & Container - Apple Dark Mode Style */
         [data-testid="metric-container"] {
-            background-color: #1C1C1E;
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #38383A;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            background: linear-gradient(180deg, #2C2C2E 0%, #1C1C1E 100%);
+            padding: 16px 20px;
+            border-radius: 16px; /* Squircle feel */
+            border: 1px solid rgba(10, 132, 255, 0.3); /* Subtle blue hint */
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transition: transform 0.2s ease;
+        }
+        [data-testid="metric-container"]:hover {
+            transform: translateY(-2px);
+        }
+        [data-testid="stMetricLabel"] {
+            color: #A1A1A6;
+            font-size: 0.9rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+        [data-testid="stMetricValue"] {
+            color: #F5F5F7;
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
         }
         
-        /* Sidebar enhancement */
+        /* Sidebar enhancement - Apple Elevated Surface */
         [data-testid="stSidebar"] {
-            background-color: #000000;
+            background-color: #1C1C1E !important;
+            border-right: 1px solid #3A3A3C;
         }
         
-        /* Button styling - Sleek & Modern */
-        button {
-            border-radius: 8px !important;
+        /* Tab Styling - iOS Segmented Control feel */
+        [data-testid="stTabs"] [data-baseweb="tab-list"] {
+            background-color: #2C2C2E;
+            border-radius: 12px;
+            padding: 4px;
+            gap: 4px;
+            border-bottom: none;
+        }
+        [data-testid="stTabs"] [data-baseweb="tab"] {
+            background-color: transparent;
+            border-radius: 8px;
+            color: #A1A1A6;
+            font-weight: 500;
+            padding: 8px 16px;
+            border: none !important;
+            box-shadow: none;
+        }
+        [data-testid="stTabs"] [aria-selected="true"] {
+            background-color: #48484A !important;
+            color: #F5F5F7 !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important;
+            font-weight: 600;
+        }
+        
+        /* Button styling - Sleek & Modern iOS Style */
+        .stButton > button {
+            background-color: #0A84FF !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 12px !important;
             font-weight: 600 !important;
+            padding: 12px 24px !important;
+            box-shadow: 0 4px 12px rgba(10, 132, 255, 0.3) !important;
+            transition: all 0.2s ease !important;
+            width: 100%;
+        }
+        .stButton > button:hover {
+            background-color: #0071E3 !important;
+            transform: scale(0.98);
         }
         
         /* Subtle dividers */
         hr {
             border: 0;
             height: 1px;
-            background: #38383A;
-            margin: 20px 0;
+            background: #3A3A3C;
+            margin: 24px 0;
+        }
+
+        /* Mobile specific adjustments */
+        @media (max-width: 768px) {
+            [data-testid="stMetricValue"] {
+                font-size: 1.5rem;
+            }
+            [data-testid="metric-container"] {
+                padding: 12px 16px;
+            }
+            .stButton > button {
+                padding: 14px 20px !important;
+                font-size: 1.1rem !important; /* Larger touch target for iPhone */
+            }
         }
     </style>
 """, unsafe_allow_html=True)
