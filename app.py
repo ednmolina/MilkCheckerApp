@@ -500,8 +500,15 @@ with st.sidebar:
     # Stock check controls
     st.subheader("🔄 Stock Check")
     if st.button("Run Stock Check Now", use_container_width=True, type="primary"):
-        with st.spinner("Checking both products... (this takes ~60-120s)"):
-            result = run_stock_check(verbose=False)
+        progress_bar = st.progress(0, text="Starting stock check...")
+        
+        def update_progress(fraction, message):
+            progress_bar.progress(fraction, text=message)
+            
+        result = run_stock_check(verbose=False, progress_callback=update_progress)
+        
+        progress_bar.empty()
+        
         if result.get("success"):
             st.success(result["message"])
             st.cache_data.clear()
@@ -519,21 +526,21 @@ with st.sidebar:
     st.divider()
 
     # CSV downloads (cached file reads)
-    st.subheader("📥 Download Data")
-    for label, path in [
-        ("Store Stock History", STORE_STOCK_CSV),
-        ("Warehouse History", WAREHOUSE_CSV),
-        ("Store List", STORES_CSV),
-    ]:
-        content = cached_export_csv(path)
-        if content:
-            st.download_button(
-                label=label,
-                data=content,
-                file_name=os.path.basename(path),
-                mime="text/csv",
-                use_container_width=True,
-            )
+    with st.expander("📥 Download Raw Data", expanded=False):
+        for label, path in [
+            ("Store Stock History", STORE_STOCK_CSV),
+            ("Warehouse History", WAREHOUSE_CSV),
+            ("Store List", STORES_CSV),
+        ]:
+            content = cached_export_csv(path)
+            if content:
+                st.download_button(
+                    label=label,
+                    data=content,
+                    file_name=os.path.basename(path),
+                    mime="text/csv",
+                    use_container_width=True,
+                )
 
     st.divider()
     if storage_status["backend"] == "google_sheets":
