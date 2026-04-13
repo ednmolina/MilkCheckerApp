@@ -43,6 +43,55 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# Add custom colors, fonts, and styling
+st.markdown("""
+    <style>
+        /* Branding colors */
+        :root {
+            --primary-color: #2E7D32;  /* Fresh green for milk */
+            --secondary-color: #FFF3E0; /* Warm cream */
+            --accent-color: #FFB74D;    /* Golden orange */
+        }
+        
+        /* Hero header styling */
+        h1 {
+            background: linear-gradient(135deg, #2E7D32 0%, #558B2F 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        /* Card-like containers */
+        [data-testid="metric-container"] {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #2E7D32;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        /* Sidebar enhancement */
+        [data-testid="stSidebar"] {
+            background-color: #f5f5f5;
+        }
+        
+        /* Button styling */
+        button {
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        
+        /* Better dividers */
+        hr {
+            border: 0;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #2E7D32, transparent);
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 SG_CENTER = [1.3521, 103.8198]
 _UTC = ZoneInfo("UTC")
 DEFAULT_PRODUCT_KEY = "chocolate"
@@ -348,10 +397,10 @@ with st.sidebar:
             f"{format_timestamp_for_timezone(warehouse.get('timestamp', 'N/A'), _display_tz)}"
         )
     else:
-        st.warning("No warehouse data yet. Run a stock check first.")
+        st.warning("⚠️ No warehouse data yet. Run a stock check first.")
 
     if legacy_product_data_present:
-        st.warning(f"Only other-product history is available. Run a fresh stock check to populate {selected_product_name} data.")
+        st.warning(f"⚠️ Only other-product history is available. Run a fresh stock check to populate {selected_product_name} data.")
 
     st.divider()
 
@@ -429,8 +478,12 @@ with tz_col:
 
 
 # --- Main content -------------------------------------------------------
-st.title("FairPrice Meiji Protein Milk Tracker")
-st.caption(f"Viewing: {selected_product_name}")
+st.markdown("# 🥛 FairPrice Meiji Tracker")
+st.markdown(f"**Tracking:** {selected_product_name}")
+
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.metric("Total Units Across All Stores", f"{total_units_all_stores:,}")
 
 tab_map, tab_history, tab_inventory = st.tabs([
     "📍 Store Finder", "📊 Stock History", "📈 Total Inventory"
@@ -503,12 +556,16 @@ with tab_map:
 
     # Summary metrics
     col1, col2, col3, col4, col5, col6 = st.columns(6)
-    col1.metric("Total Stores", len(stores_with_stock))
-    col2.metric("In Stock", in_stock_count)
-    col3.metric("Low Stock", low_stock_count)
-    col4.metric("Out of Stock", out_stock_count)
-    col5.metric("Not Available", not_avail_count)
-    col6.metric("Total Units", f"{total_units_all_stores:,}")
+    metrics = [
+        (col1, "📦", "Total Stores", len(stores_with_stock)),
+        (col2, "🟢", "In Stock", in_stock_count),
+        (col3, "🟡", "Low Stock", low_stock_count),
+        (col4, "🔴", "Out of Stock", out_stock_count),
+        (col5, "⚪", "Not Available", not_avail_count),
+        (col6, "📊", "Total Units", f"{total_units_all_stores:,}"),
+    ]
+    for col, emoji, label, value in metrics:
+        col.metric(f"{emoji} {label}", value)
 
     st.caption(f"Showing {len(filtered)} stores (filter: {filter_option})")
 
@@ -566,18 +623,18 @@ with tab_map:
         for s in display_stores[:50]:
             stock = s["stock"]
             if stock > 10:
-                status_str = f"🟢 In Stock ({stock})"
+                status_badge = "🟢 In Stock"
             elif stock > 0:
-                status_str = f"🟠 Low Stock ({stock})"
+                status_badge = "🟡 Low Stock"
             elif stock == 0:
-                status_str = "🔴 Out of Stock"
+                status_badge = "🔴 Out of Stock"
             else:
-                status_str = "⚪ Not Available"
+                status_badge = "⚪ Unknown"
 
             row = {
                 "Store": s.get("name", "Unknown"),
                 "Type": s.get("storeType", ""),
-                "Stock Status": status_str,
+                "Stock Status": status_badge,
                 "Units": stock if stock >= 0 else None,
                 "Address": s.get("address", ""),
                 "Last Checked On": format_timestamp_for_timezone(s.get("last_checked", "Never"), _display_tz),
@@ -587,9 +644,18 @@ with tab_map:
             rows.append(row)
 
         df = pd.DataFrame(rows)
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(
+            df,
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "Stock Status": st.column_config.TextColumn(width="small"),
+                "Units": st.column_config.NumberColumn(format="%d units"),
+                "Distance": st.column_config.TextColumn(width="small"),
+            }
+        )
     else:
-        st.info("No stores match the current filter.")
+        st.info("ℹ️ No stores match the current filter.")
 
 # --- Tab 2: Stock History ----------------------------------------------
 with tab_history:
@@ -614,9 +680,16 @@ with tab_history:
             df_wh[["timestamp", "in_store_stock", "online_stock", "sap_stock", "price", "mrp", "discount"]],
             use_container_width=True,
             hide_index=True,
+            column_config={
+                "timestamp": st.column_config.DatetimeColumn("Timestamp", format="MMM DD, h:mm a"),
+                "in_store_stock": st.column_config.NumberColumn("In-Store Stock", format="%d units"),
+                "online_stock": st.column_config.NumberColumn("Online Stock", format="%d units"),
+                "price": st.column_config.NumberColumn("Price", format="$%.2f"),
+                "mrp": st.column_config.NumberColumn("MRP", format="$%.2f"),
+            }
         )
     else:
-        st.info("No warehouse history yet. Run a stock check first.")
+        st.info("ℹ️ No warehouse history yet. Run a stock check first.")
 
     st.divider()
 
@@ -661,6 +734,14 @@ with tab_history:
                     ]],
                     use_container_width=True,
                     hide_index=True,
+                    column_config={
+                        "timestamp": st.column_config.DatetimeColumn("Timestamp", format="MMM DD, h:mm a"),
+                        "in_store_stock": st.column_config.NumberColumn("Stock", format="%d units"),
+                        "min_units_sold": st.column_config.NumberColumn("Min Sold", format="%d units"),
+                        "min_units_restocked": st.column_config.NumberColumn("Restocked", format="%d units"),
+                        "net_change": st.column_config.NumberColumn("Net Change", format="%+d units"),
+                        "price": st.column_config.NumberColumn("Price", format="$%.2f"),
+                    }
                 )
 
     st.divider()
@@ -702,13 +783,21 @@ with tab_history:
                 })
         if rows:
             df_latest = pd.DataFrame(rows)
-            st.dataframe(df_latest, use_container_width=True, hide_index=True)
+            st.dataframe(
+                df_latest,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "In-Store Stock": st.column_config.NumberColumn(format="%d units"),
+                    "SAP Stock": st.column_config.NumberColumn(format="%d units"),
+                }
+            )
 
             st.subheader("Stock Levels by Store")
             chart_df = df_latest[["Store", "In-Store Stock"]].set_index("Store")
             st.bar_chart(chart_df, use_container_width=True)
     else:
-        st.info("No store stock history yet. Run a stock check first.")
+        st.info("ℹ️ No store stock history yet. Run a stock check first.")
 
 # --- Tab 3: Total Inventory --------------------------------------------
 with tab_inventory:
@@ -734,7 +823,7 @@ with tab_inventory:
             wh = cached_get_latest_warehouse(selected_product_sku)
             if wh:
                 combined = int(latest_row["total_units"]) + int(wh["in_store_stock"])
-                st.info(f"**Combined Inventory (Stores + Warehouse):** {combined:,} units "
+                st.info(f"ℹ️ **Combined Inventory (Stores + Warehouse):** {combined:,} units "
                         f"({int(latest_row['total_units']):,}) in stores + {int(wh['in_store_stock']):,} in warehouse")
 
             st.divider()
@@ -800,7 +889,17 @@ with tab_inventory:
                     "Store", "Type", "Latest Stock", "Min Sold Observed",
                     "Min Restocked", "Net Change", "Batches Seen", "First Seen", "Last Seen"
                 ]
-                st.dataframe(display_movement_df, use_container_width=True, hide_index=True)
+                st.dataframe(
+                    display_movement_df,
+                    use_container_width=True,
+                    hide_index=True,
+                    column_config={
+                        "Latest Stock": st.column_config.NumberColumn(format="%d units"),
+                        "Min Sold Observed": st.column_config.NumberColumn(format="%d units"),
+                        "Min Restocked": st.column_config.NumberColumn(format="%d units"),
+                        "Net Change": st.column_config.NumberColumn(format="%+d units"),
+                    }
+                )
 
             # Raw data table
             st.subheader("Batch Summary Table")
@@ -815,7 +914,17 @@ with tab_inventory:
                 "Min Restocked", "Net Change", "Stores Checked",
                 "Stores With Product", "In Stock", "Out of Stock", "Avg Stock/Store"
             ]
-            st.dataframe(display_df, use_container_width=True, hide_index=True)
+            st.dataframe(
+                display_df,
+                use_container_width=True,
+                hide_index=True,
+                column_config={
+                    "Total Units": st.column_config.NumberColumn(format="%d units"),
+                    "Min Sold": st.column_config.NumberColumn(format="%d units"),
+                    "Min Restocked": st.column_config.NumberColumn(format="%d units"),
+                    "Net Change": st.column_config.NumberColumn(format="%+d units"),
+                }
+            )
 
             # Download button
             csv_data = df_totals.to_csv(index=False)
@@ -827,4 +936,4 @@ with tab_inventory:
                 use_container_width=True,
             )
     else:
-        st.info("No store stock history yet. Run a stock check first to start tracking total inventory.")
+        st.info("ℹ️ No store stock history yet. Run a stock check first to start tracking total inventory.")

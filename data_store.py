@@ -88,6 +88,8 @@ def _tz_label(dt: datetime, tzinfo: ZoneInfo) -> str:
     """Return a stable display label for known timezones."""
     if tzinfo.key == "Asia/Singapore":
         return "SGT"
+    if tzinfo.key == "America/New_York":
+        return "ET"
     return dt.strftime("%Z")
 
 
@@ -95,7 +97,10 @@ def parse_stored_timestamp(value: object) -> Optional[datetime]:
     """
     Parse persisted timestamps from either:
     - canonical UTC ISO strings, e.g. 2026-04-12T13:15:00Z
-    - legacy naive UTC strings, e.g. 2026-04-12 13:15:00
+    - legacy naive local strings, e.g. 2026-03-18 23:32:17
+
+    Legacy naive rows are treated as America/New_York local time. This matches
+    the historical batch_id generation logic and existing persisted data.
     """
     if value in (None, "", "Never", "N/A"):
         return None
@@ -108,13 +113,13 @@ def parse_stored_timestamp(value: object) -> Optional[datetime]:
         iso_value = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
         parsed = datetime.fromisoformat(iso_value)
         if parsed.tzinfo is None:
-            return parsed.replace(tzinfo=_UTC)
+            return parsed.replace(tzinfo=_EASTERN)
         return parsed
     except ValueError:
         pass
 
     try:
-        return datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_UTC)
+        return datetime.strptime(raw[:19], "%Y-%m-%d %H:%M:%S").replace(tzinfo=_EASTERN)
     except ValueError:
         return None
 
