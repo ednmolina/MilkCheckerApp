@@ -212,6 +212,7 @@ SG_CENTER = [1.3521, 103.8198]
 _UTC = ZoneInfo("UTC")
 DEFAULT_PRODUCT_KEY = "chocolate"
 PRODUCT_KEYS = list(PRODUCTS.keys())
+DEFAULT_FOCUS_STORE = "Tampines Blk 107"
 
 if st.session_state.get("selected_product_key") not in PRODUCTS:
     st.session_state["selected_product_key"] = DEFAULT_PRODUCT_KEY
@@ -833,11 +834,27 @@ with tab_history:
 
     # Per-store stock history (cached read)
     if not store_history_df.empty:
-        st.subheader("Per-Store Stock History")
+        st.subheader("Focus Store History")
 
         store_names = sorted(store_history_df[store_history_df["in_store_stock"] >= 0]["store_name"].unique())
         if store_names:
-            selected_store = st.selectbox("Select a store:", store_names)
+            if (
+                st.session_state.get("history_focus_store") not in store_names
+            ):
+                st.session_state["history_focus_store"] = (
+                    DEFAULT_FOCUS_STORE if DEFAULT_FOCUS_STORE in store_names else store_names[0]
+                )
+
+            st.caption(
+                "This section defaults to Tampines Blk 107, but you can switch to any store."
+                if DEFAULT_FOCUS_STORE in store_names
+                else "Select a store to inspect its stock pattern over time."
+            )
+            selected_store = st.selectbox(
+                "Focus store:",
+                store_names,
+                key="history_focus_store",
+            )
             store_data = store_history_df[store_history_df["store_name"] == selected_store].sort_values("timestamp").copy()
             store_data["timestamp"] = convert_timestamp_series(store_data["timestamp"], _display_tz)
             store_moves = (
