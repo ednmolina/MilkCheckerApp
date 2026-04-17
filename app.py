@@ -266,10 +266,20 @@ def render_stat_pills(items: list[tuple[str, str]]) -> None:
     st.markdown(f'<div class="stat-pill-row">{pills}</div>', unsafe_allow_html=True)
 
 
-def convert_timestamp_series(values: pd.Series, target_tz: ZoneInfo) -> pd.Series:
-    """Parse mixed legacy/current timestamp strings and convert for charting."""
+def convert_timestamp_series(
+    values: pd.Series, target_tz: ZoneInfo, strip_tz: bool = False
+) -> pd.Series:
+    """Parse mixed legacy/current timestamp strings and convert to a target timezone."""
     parsed = values.apply(parse_stored_timestamp)
-    return pd.to_datetime(parsed, utc=True, errors="coerce").dt.tz_convert(target_tz)
+    converted = pd.to_datetime(parsed, utc=True, errors="coerce").dt.tz_convert(target_tz)
+    if strip_tz:
+        return converted.dt.tz_localize(None)
+    return converted
+
+
+def format_timestamp_series(values: pd.Series, target_tz: ZoneInfo) -> pd.Series:
+    """Format timestamps as display strings in the selected timezone."""
+    return values.apply(lambda value: format_timestamp_for_timezone(value, target_tz))
 
 
 def prepare_store_history_frame(history_rows: list[dict]) -> pd.DataFrame:
@@ -806,21 +816,34 @@ with tab_history:
     if wh_history:
         st.subheader("Warehouse Stock Over Time")
         df_wh = pd.DataFrame(wh_history)
-        df_wh["timestamp"] = convert_timestamp_series(df_wh["timestamp"], _display_tz)
-        df_wh = df_wh.sort_values("timestamp")
+        df_wh["display_timestamp"] = convert_timestamp_series(
+            df_wh["timestamp"], _display_tz, strip_tz=True
+        )
+        df_wh = df_wh.sort_values("display_timestamp")
 
-        st.line_chart(df_wh.set_index("timestamp")[["in_store_stock"]], use_container_width=True)
+        st.line_chart(
+            df_wh.set_index("display_timestamp")[["in_store_stock"]],
+            use_container_width=True,
+        )
 
         st.subheader("Price History")
-        st.line_chart(df_wh.set_index("timestamp")[["price", "mrp"]], use_container_width=True)
+        st.line_chart(
+            df_wh.set_index("display_timestamp")[["price", "mrp"]],
+            use_container_width=True,
+        )
 
         st.subheader("Warehouse Data Table")
+        warehouse_display_df = df_wh[
+            ["timestamp", "in_store_stock", "online_stock", "sap_stock", "price", "mrp", "discount"]
+        ].copy()
+        warehouse_display_df["timestamp"] = format_timestamp_series(
+            warehouse_display_df["timestamp"], _display_tz
+        )
         st.dataframe(
-            df_wh[["timestamp", "in_store_stock", "online_stock", "sap_stock", "price", "mrp", "discount"]],
+            warehouse_display_df,
             use_container_width=True,
             hide_index=True,
             column_config={
-                "timestamp": st.column_config.DatetimeColumn("Timestamp", format="MMM DD, h:mm a"),
                 "in_store_stock": st.column_config.NumberColumn("In-Store Stock", format="%d units"),
                 "online_stock": st.column_config.NumberColumn("Online Stock", format="%d units"),
                 "price": st.column_config.NumberColumn("Price", format="$%.2f"),
@@ -855,14 +878,22 @@ with tab_history:
                 store_names,
                 key="history_focus_store",
             )
-            store_data = store_history_df[store_history_df["store_name"] == selected_store].sort_values("timestamp").copy()
-            store_data["timestamp"] = convert_timestamp_series(store_data["timestamp"], _display_tz)
+            store_data = (
+                store_history_df[store_history_df["store_name"] == selected_store]
+                .sort_values("timestamp")
+                .copy()
+            )
+            store_data["display_timestamp"] = convert_timestamp_series(
+                store_data["timestamp"], _display_tz, strip_tz=True
+            )
             store_moves = (
                 store_movement_df[store_movement_df["store_name"] == selected_store]
                 .sort_values("timestamp")
                 .copy()
             )
-            store_moves["timestamp"] = store_moves["timestamp"].dt.tz_convert(_display_tz)
+            store_moves["display_timestamp"] = convert_timestamp_series(
+                store_moves["timestamp"], _display_tz, strip_tz=True
+            )
 
             if not store_data.empty:
                 latest_store_row = store_data.iloc[-1]
@@ -879,18 +910,21 @@ with tab_history:
                 st.caption("These are lower-bound estimates from consecutive snapshots. Restocks between checks can hide additional sales.")
 
                 st.line_chart(
-                    store_data.set_index("timestamp")[["in_store_stock"]],
+                    store_data.set_index("display_timestamp")[["in_store_stock"]],
                     use_container_width=True,
                 )
+                store_moves_display_df = store_moves[[
+                    "timestamp", "batch_id", "in_store_stock", "min_units_sold",
+                    "min_units_restocked", "net_change", "sap_stock", "price", "mrp"
+                ]].copy()
+                store_moves_display_df["timestamp"] = format_timestamp_series(
+                    store_moves_display_df["timestamp"], _display_tz
+                )
                 st.dataframe(
-                    store_moves[[
-                        "timestamp", "batch_id", "in_store_stock", "min_units_sold",
-                        "min_units_restocked", "net_change", "sap_stock", "price", "mrp"
-                    ]],
+                    store_moves_display_df,
                     use_container_width=True,
                     hide_index=True,
                     column_config={
-                        "timestamp": st.column_config.DatetimeColumn("Timestamp", format="MMM DD, h:mm a"),
                         "in_store_stock": st.column_config.NumberColumn("Stock", format="%d units"),
                         "min_units_sold": st.column_config.NumberColumn("Min Sold", format="%d units"),
                         "min_units_restocked": st.column_config.NumberColumn("Restocked", format="%d units"),
@@ -963,7 +997,9 @@ with tab_inventory:
 
     if not inventory_totals_df.empty:
         df_totals = inventory_totals_df.copy()
-        df_totals["timestamp"] = convert_timestamp_series(df_totals["timestamp"], _display_tz)
+        df_totals["display_timestamp"] = convert_timestamp_series(
+            df_totals["timestamp"], _display_tz, strip_tz=True
+        )
 
         # Current totals at the top
         if not df_totals.empty:
@@ -992,15 +1028,20 @@ with tab_inventory:
 
             # Charts
             st.subheader("Total Inventory Over Time")
-            st.line_chart(df_totals.set_index("timestamp")[["total_units"]], use_container_width=True)
-
-            st.subheader("Inferred Movement Per Batch")
             st.line_chart(
-                df_totals.set_index("timestamp")[["min_units_sold", "min_units_restocked"]],
+                df_totals.set_index("display_timestamp")[["total_units"]],
                 use_container_width=True,
             )
 
-            cumulative_sales_df = df_totals[["timestamp", "min_units_sold", "min_units_restocked"]].copy()
+            st.subheader("Inferred Movement Per Batch")
+            st.line_chart(
+                df_totals.set_index("display_timestamp")[["min_units_sold", "min_units_restocked"]],
+                use_container_width=True,
+            )
+
+            cumulative_sales_df = df_totals[
+                ["display_timestamp", "min_units_sold", "min_units_restocked"]
+            ].copy()
             cumulative_sales_df["cumulative_min_sold"] = cumulative_sales_df["min_units_sold"].cumsum()
             cumulative_sales_df["cumulative_min_restocked"] = cumulative_sales_df["min_units_restocked"].cumsum()
 
@@ -1014,15 +1055,21 @@ with tab_inventory:
             s3.metric("Cumulative Net Change", f"{total_net_change_all:,}")
 
             st.line_chart(
-                cumulative_sales_df.set_index("timestamp")[["cumulative_min_sold"]],
+                cumulative_sales_df.set_index("display_timestamp")[["cumulative_min_sold"]],
                 use_container_width=True,
             )
 
             st.subheader("Stores In Stock Over Time")
-            st.line_chart(df_totals.set_index("timestamp")[["stores_in_stock", "stores_out_of_stock"]], use_container_width=True)
+            st.line_chart(
+                df_totals.set_index("display_timestamp")[["stores_in_stock", "stores_out_of_stock"]],
+                use_container_width=True,
+            )
 
             st.subheader("Average Stock Per Store Over Time")
-            st.line_chart(df_totals.set_index("timestamp")[["avg_stock_per_store"]], use_container_width=True)
+            st.line_chart(
+                df_totals.set_index("display_timestamp")[["avg_stock_per_store"]],
+                use_container_width=True,
+            )
 
             st.divider()
 
@@ -1044,6 +1091,12 @@ with tab_inventory:
                     "Store", "Type", "Latest Stock", "Min Sold Observed",
                     "Min Restocked", "Net Change", "Batches Seen", "First Seen", "Last Seen"
                 ]
+                display_movement_df["First Seen"] = format_timestamp_series(
+                    display_movement_df["First Seen"], _display_tz
+                )
+                display_movement_df["Last Seen"] = format_timestamp_series(
+                    display_movement_df["Last Seen"], _display_tz
+                )
                 st.dataframe(
                     display_movement_df,
                     use_container_width=True,
@@ -1069,6 +1122,7 @@ with tab_inventory:
                 "Min Restocked", "Net Change", "Stores Checked",
                 "Stores With Product", "In Stock", "Out of Stock", "Avg Stock/Store"
             ]
+            display_df["Timestamp"] = format_timestamp_series(display_df["Timestamp"], _display_tz)
             st.dataframe(
                 display_df,
                 use_container_width=True,
