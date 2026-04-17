@@ -12,6 +12,7 @@ Optimizations:
 
 from __future__ import annotations
 
+import altair as alt
 import streamlit as st
 import folium
 from folium.plugins import MarkerCluster
@@ -280,6 +281,40 @@ def convert_timestamp_series(
 def format_timestamp_series(values: pd.Series, target_tz: ZoneInfo) -> pd.Series:
     """Format timestamps as display strings in the selected timezone."""
     return values.apply(lambda value: format_timestamp_for_timezone(value, target_tz))
+
+
+def render_time_series_chart(
+    df: pd.DataFrame,
+    x_col: str,
+    y_cols: list[str],
+    *,
+    y_title: str = "Value",
+    value_format: str = ",.0f",
+    height: int = 320,
+) -> None:
+    """Render a time-series chart with hover tooltips that include date and time."""
+    chart_df = df[[x_col, *y_cols]].melt(
+        id_vars=[x_col],
+        var_name="Series",
+        value_name="Value",
+    )
+    chart = (
+        alt.Chart(chart_df)
+        .mark_line(point=True)
+        .encode(
+            x=alt.X(f"{x_col}:T", title="Timestamp"),
+            y=alt.Y("Value:Q", title=y_title),
+            color=alt.Color("Series:N", title=""),
+            tooltip=[
+                alt.Tooltip(f"{x_col}:T", title="Timestamp", format="%Y-%m-%d %H:%M:%S"),
+                alt.Tooltip("Series:N", title="Series"),
+                alt.Tooltip("Value:Q", title="Value", format=value_format),
+            ],
+        )
+        .properties(height=height)
+        .interactive()
+    )
+    st.altair_chart(chart, use_container_width=True)
 
 
 def prepare_store_history_frame(history_rows: list[dict]) -> pd.DataFrame:
@@ -821,15 +856,21 @@ with tab_history:
         )
         df_wh = df_wh.sort_values("display_timestamp")
 
-        st.line_chart(
-            df_wh.set_index("display_timestamp")[["in_store_stock"]],
-            use_container_width=True,
+        render_time_series_chart(
+            df_wh,
+            "display_timestamp",
+            ["in_store_stock"],
+            y_title="Units",
+            value_format=",.0f",
         )
 
         st.subheader("Price History")
-        st.line_chart(
-            df_wh.set_index("display_timestamp")[["price", "mrp"]],
-            use_container_width=True,
+        render_time_series_chart(
+            df_wh,
+            "display_timestamp",
+            ["price", "mrp"],
+            y_title="Price",
+            value_format=",.2f",
         )
 
         st.subheader("Warehouse Data Table")
@@ -909,9 +950,12 @@ with tab_history:
 
                 st.caption("These are lower-bound estimates from consecutive snapshots. Restocks between checks can hide additional sales.")
 
-                st.line_chart(
-                    store_data.set_index("display_timestamp")[["in_store_stock"]],
-                    use_container_width=True,
+                render_time_series_chart(
+                    store_data,
+                    "display_timestamp",
+                    ["in_store_stock"],
+                    y_title="Units",
+                    value_format=",.0f",
                 )
                 store_moves_display_df = store_moves[[
                     "timestamp", "batch_id", "in_store_stock", "min_units_sold",
@@ -1028,15 +1072,21 @@ with tab_inventory:
 
             # Charts
             st.subheader("Total Inventory Over Time")
-            st.line_chart(
-                df_totals.set_index("display_timestamp")[["total_units"]],
-                use_container_width=True,
+            render_time_series_chart(
+                df_totals,
+                "display_timestamp",
+                ["total_units"],
+                y_title="Units",
+                value_format=",.0f",
             )
 
             st.subheader("Inferred Movement Per Batch")
-            st.line_chart(
-                df_totals.set_index("display_timestamp")[["min_units_sold", "min_units_restocked"]],
-                use_container_width=True,
+            render_time_series_chart(
+                df_totals,
+                "display_timestamp",
+                ["min_units_sold", "min_units_restocked"],
+                y_title="Units",
+                value_format=",.0f",
             )
 
             cumulative_sales_df = df_totals[
@@ -1054,21 +1104,30 @@ with tab_inventory:
             s2.metric("Cumulative Min Restocked", f"{total_min_restocked_all:,}")
             s3.metric("Cumulative Net Change", f"{total_net_change_all:,}")
 
-            st.line_chart(
-                cumulative_sales_df.set_index("display_timestamp")[["cumulative_min_sold"]],
-                use_container_width=True,
+            render_time_series_chart(
+                cumulative_sales_df,
+                "display_timestamp",
+                ["cumulative_min_sold"],
+                y_title="Units",
+                value_format=",.0f",
             )
 
             st.subheader("Stores In Stock Over Time")
-            st.line_chart(
-                df_totals.set_index("display_timestamp")[["stores_in_stock", "stores_out_of_stock"]],
-                use_container_width=True,
+            render_time_series_chart(
+                df_totals,
+                "display_timestamp",
+                ["stores_in_stock", "stores_out_of_stock"],
+                y_title="Stores",
+                value_format=",.0f",
             )
 
             st.subheader("Average Stock Per Store Over Time")
-            st.line_chart(
-                df_totals.set_index("display_timestamp")[["avg_stock_per_store"]],
-                use_container_width=True,
+            render_time_series_chart(
+                df_totals,
+                "display_timestamp",
+                ["avg_stock_per_store"],
+                y_title="Units",
+                value_format=",.1f",
             )
 
             st.divider()
